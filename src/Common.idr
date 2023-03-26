@@ -17,13 +17,34 @@
   along with rpncalc.  If not, see <https://www.gnu.org/licenses/>.
 -}
 
-||| This is an idris port of my JavaScript RPN Calculator
-|||
-||| This is an example of an interactive web application written in
-||| idris. It is also meant to replace my original calculator.
-module Main
-
-import Calc
+||| Common definitions that don't beling to any other module
+module Common
 
 %default total
 
+||| The type of all user-visible error messages
+public export
+Error : Type
+Error = String
+
+||| Type of fractions
+public export
+data Rat = MkRat Integer Nat
+
+||| Translate a maybe value to an Either
+|||
+||| XXX: I'm sure there's a standard library function that does this,
+||| I just can't be arsed to look for it.
+public export
+fromMaybe : b -> Maybe a -> Either b a
+fromMaybe x Nothing  = Left  x
+fromMaybe x (Just y) = Right y
+
+||| Type of all values
+public export
+data Value 
+  = I Integer
+  | F Double
+  | R Rat
+  | S String
+  | P (SnocList Value)
