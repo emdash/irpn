@@ -57,16 +57,16 @@ tryOperation
   -> Calc   
   -> Either Error Calc
 tryOperation fn calc = do
-  next <- fn (state calc)
+  next <- fn calc.state
   pure ({
     state   := next,
-    history $= ((state calc) ::),
+    history $= (calc.state ::),
     undone  := []
   } calc)
   
 ||| Try to restore the previous state
 undo : Calc -> Either Error Calc
-undo calc = case history calc of
+undo calc = case calc.history of
   []      => Left  "History is empty"
   x :: xs => Right ({
     state   := x, 
@@ -76,7 +76,7 @@ undo calc = case history calc of
 
 ||| Try to redo an undone action
 redo : Calc -> Either Error Calc
-redo calc = case undone calc of
+redo calc = case calc.undone of
   []      => Left "Redo stack is empty"
   x :: xs => Right ({
     state   := x,

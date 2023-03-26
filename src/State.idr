@@ -83,7 +83,7 @@ init = MkState Empty [] Lin builtins
 public export
 input : Input.Key -> State -> Either Error State
 input symbol state = do
-  next <- fromMaybe "Invalid Char" (enterKey (accum state) symbol)
+  next <- fromMaybe "Invalid Char" (enterKey state.accum symbol)
   pure ({ accum := next } state)
 
 ||| Transfer a value from accumulator to stack
@@ -92,7 +92,7 @@ input symbol state = do
 public export
 enter : State -> Either Error State
 enter state = do
-  value <- Input.value (accum (state))
+  value <- Input.value state.accum
   pure ({ 
       accum := Empty,
       stack $= (value ::),
@@ -102,14 +102,14 @@ enter state = do
 ||| Return the top of stack, within the either monad
 public export
 top : State -> Either Error Value
-top state = case (stack state) of
+top state = case state.stack of
   []      => Left "Stack Underflow"
   x :: xs => Right x
 
 ||| Remove and return the top of the stack, within the either monad
 public export
 pop : State -> Either Error (Value, State)
-pop state = case (stack state) of
+pop state = case state.stack of
   []      => Left "Stack Underflow"
   x :: xs => Right (x, { stack := xs } state)
 
@@ -124,8 +124,8 @@ public export
 apply : String -> State -> Either Error State
 apply name state = do
   state <- enter state
-  func  <- lookup name (env state)
-  stack <- func (stack (state))
+  func  <- lookup name state.env
+  stack <- func state.stack
   pure ({ 
     stack := stack, 
     tape $= (:< Fn name)
