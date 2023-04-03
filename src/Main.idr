@@ -18,12 +18,41 @@
 -}
 
 ||| This is an idris port of my JavaScript RPN Calculator
-|||
-||| This is an example of an interactive web application written in
-||| idris. It is also meant to replace my original calculator.
 module Main
 
+import Data.String
+
+import Control.Monad.Indexed.State
+import JS
+import Web.Dom
+import Web.Html
+import Web.Internal.DomPrim
+import Web.Raw.UIEvents
 import Calc
+import Input
+import Render
 
-%default total
 
+
+
+
+
+renderAccum : Accum -> JSIO Div
+renderAccum accum = do
+  ret     <- createElement Div
+  content <- createElement Div
+  ignore $ appendChild ret content
+  pure ret
+
+
+export
+render : Div -> Calc -> JSIO ()
+render element calc = do
+  innerHTML element .= ""  
+  element `appendChild` 
+  
+
+
+
+main : IO ()
+main = runJS (render Calc.new)

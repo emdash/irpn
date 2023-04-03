@@ -83,7 +83,7 @@ init = MkState Empty [] Lin builtins
 public export
 input : Input.Key -> State -> Either Error State
 input symbol state = do
-  next <- fromMaybe "Invalid Char" (enterKey state.accum symbol)
+  next <- fromMaybe "Invalid Char" (enterKey symbol state.accum)
   pure ({ accum := next } state)
 
 ||| Transfer a value from accumulator to stack

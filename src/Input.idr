@@ -54,8 +54,8 @@ public export
 data Accum : Type where
   Empty   :                                        Accum
   Digits  :                       Integer       -> Accum
-  Decimal :            Integer -> Integer       -> Accum
-  Num     :            Integer -> Integer       -> Accum
+  Decimal :            Integer -> Nat           -> Accum
+  Num     :            Integer -> Maybe Nat     -> Accum
   Denom   : Integer -> Integer -> Maybe Nat     -> Accum
   Id      :                       SnocList Char -> Accum
 
@@ -92,7 +92,8 @@ enterDigit : Accum -> Digit -> Accum
 enterDigit Empty                   d = Digits      (foldDigit 0  d)
 enterDigit (Digits      ds)        d = Digits      (foldDigit ds d)
 enterDigit (Decimal i   ds)        d = Decimal i   (foldDigit ds d)
-enterDigit (Num     i   ds)        d = Num     i   (foldDigit ds d)
+enterDigit (Num     i   Nothing)   d = Num     i   (Just (foldDigit 0  d))
+enterDigit (Num     i   (Just ds)) d = Num     i   (Just (foldDigit ds d))
 enterDigit (Denom   i n Nothing)   d = Denom   i n (Just (foldDigit 0  d))
 enterDigit (Denom   i n (Just ds)) d = Denom   i n (Just (foldDigit ds d))
 enterDigit (Id          s)         d = Id          (s :< (digitToChar d))
@@ -121,24 +122,25 @@ enterPoint _          = Nothing
 ||| - contains only digits
 ||| - contains an incomplete fraction
 enterFrac : Accum -> Maybe Accum
-enterFrac Empty         = Just (Num 0 0)
-enterFrac (Digits  i)   = Just (Num i 0)
-enterFrac (Decimal _ _) = Nothing
-enterFrac (Num     i n) = Just (Denom i n Nothing)
-enterFrac (Denom _ _ _) = Nothing
-enterFrac (Id _)        = Nothing
+enterFrac Empty                = Just (Num 0 Nothing)
+enterFrac (Digits  i)          = Just (Num i Nothing)
+enterFrac (Decimal _ _)        = Nothing
+enterFrac (Num     i Nothing)  = Nothing
+enterFrac (Num     i (Just n)) = Just (Denom i (cast n) Nothing)
+enterFrac (Denom    _ _ _)     = Nothing
+enterFrac (Id       _)         = Nothing
 
 ||| Send a symbol to the accumulator
 |||
 ||| If the symbol is accepted, the new accumulator state is
 ||| returned. If the symbol is rejected, Nothing is returned.
 public export
-enterKey : Accum -> Key -> Maybe Accum
-enterKey accum (Alpha a) = enterAlpha accum a
-enterKey accum (Dig   d) = Just (enterDigit accum d)
-enterKey accum Point     = enterPoint accum
-enterKey accum Frac      = enterFrac  accum
-enterKey _     Clear     = Just Empty
+enterKey : Key -> Accum -> Maybe Accum
+enterKey (Alpha a) accum = enterAlpha accum a
+enterKey (Dig   d) accum = Just (enterDigit accum d)
+enterKey Point     accum = enterPoint accum
+enterKey Frac      accum = enterFrac  accum
+enterKey Clear     _     = Just Empty
   
 ||| Get the value from the accumulator
 |||
@@ -154,3 +156,9 @@ value (Num i n)            = Left "Incomplete fraction."
 value (Denom i n Nothing)  = Left "Incomplete fraction."
 value (Denom i n (Just d)) = Right  (R (MkRat ((i * (cast d)) + n) d))
 value (Id id)              = Right (S (pack (asList id)))
+
+
+public export
+test : SnocList Key -> Maybe Accum
+test Lin           = Just Empty
+test (keys :< key) = enterKey key !(test keys)

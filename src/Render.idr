@@ -13,19 +13,19 @@ import Calc
 
 
 ||| Like Show, except strings and chars are presented as-is.
-interface Show t => ToString t where 
+interface Show t => ToString t where
   toString : t -> String
   toString = show
-  
+
 ToString String where
   toString x = x
-  
+
 ToString Char where
   toString x = pack [x]
-  
+
 ToString (List Char) where
   toString x = pack x
-  
+
 ToString Nat     where
 ToString Integer where
 ToString Double  where
@@ -45,7 +45,7 @@ ToString Double  where
 ||| : (<:)  => `setAttribute`
 ||| : (<*)  => `addEventListener` (TBD)
 export
-data VDom : Type where 
+data VDom : Type where
   T    :           String           -> VDom
   E    :           String           -> VDom
   NS   : String -> String           -> VDom
@@ -58,7 +58,7 @@ infixl 10 +*
 
 -- Quick-and-Dirty DSL for the html subset I use in this project
 -- not going to document each function here, as this is all just boilerplate
-t      : ToString a => a -> VDom 
+t      : ToString a => a -> VDom
 t x  = T (toString x)
 div    : VDom             ; div    = E "div"
 span   : VDom             ; span   = E "span"
@@ -117,11 +117,11 @@ vrender (x +* ys) = do
 
 ||| Renders a labeled container
 container : String -> VDom -> VDom
-container id name = div 
-  <: ("id",        id) 
-  <: ("class", "grid") 
+container id name = div
+  <: ("id",        id)
+  <: ("class", "grid")
   ++ (h1 ++ name)
-  
+
 ||| Constructs a group of items representing a mutually-exclusive choice
 |||
 ||| XXX: it'd be interesting to be able to reflect on an ADT and
@@ -138,38 +138,61 @@ radioGroup selected ((key, label) :: xs) =
     else ret :: radioGroup selected xs
 
 
-||| I use some MathML elements, mainly to render fractions
-namespace MathML
-  ||| Create an element in the MathML namespace
-  public export
-  mathml : String -> VDom
-  mathml = NS "http://www.w3.org/1998/Math/MathML"
-  
-  -- Quick-and-Dirty dsl for the subset of MathML I use in this project
-  public export math  : VDom  ; math  = mathml "math"
-  public export mfrac : VDom  ; mfrac = mathml "mfrac"
-  public export mrow  : VDom  ; mrow  = mathml "mrow"
-  public export mi    : VDom  ; mi    = mathml "mi" 
-  public export mo    : VDom  ; mo    = mathml "mo"
-  public export mn    : VDom  ; mn    = mathml "mn"
+-- Quick-and-Dirty dsl for the subset of MathML I use in this project
 
-  ||| XXX: I find this inelegant
-  public export
-  data Item : Type where
-    Num : ToString a => a -> Item
-    Str :          String -> Item
-    Dom :          VDom   -> Item
-    
-  ||| This is to avoid extraneous \" characters appearing in the output.
-  ||| XXX: I also find this inelegant
-  public export mitem : Item -> VDom
-  mitem (Num   x) = mn ++ (t   x)
-  mitem (Str str) = mi ++ (t str)
-  mitem (Dom   d) = mi ++ d
+||| Create an element in the MathML namespace
+mathml : String -> VDom
 
-  ||| Return a MathML fraction
-  public export fraction : Item -> Item -> VDom
-  fraction num denom = mfrac ++ (mitem num) ++ (mitem denom)
+-- not going to document this boilerplate
+mathml = NS "http://www.w3.org/1998/Math/MathML"
+math  : VDom  ; math  = mathml "math"
+mfrac : VDom  ; mfrac = mathml "mfrac"
+mrow  : VDom  ; mrow  = mathml "mrow"
+mi    : VDom  ; mi    = mathml "mi"
+mn    : VDom  ; mn    = mathml "mn"
+
+{- define a toMathML function for some likely types -}
+interface ToMathML a where
+  toMathML : a -> VDom
+
+ToMathML String where
+  toMathML s = mi ++ t s
+
+ToMathML VDom where
+  toMathML v = mi ++ v
+
+ToMathML Integer where
+  toMathML 0 = mn
+  toMathML i = mn ++ t i
+
+ToMathML Nat where
+  toMathML 0 = mn
+  toMathML n = mn ++ t n
+
+ToMathML a => ToMathML (Maybe a) where
+  toMathML Nothing  = t ""
+  toMathML (Just x) = toMathML x
+
+||| Render a leaf fraction from its parts
+fraction : ToMathML a => ToMathML b => a -> b -> VDom
+fraction num denom = mfrac ++ toMathML num ++ toMathML denom
+
+||| Render a leaf mixed number from its parts
+mixed
+  :  ToMathML i
+  => ToMathML n
+  => ToMathML d
+  => i
+  -> n
+  -> d
+  -> VDom
+mixed int num denom = mrow ++ (toMathML int) ++ (fraction num denom)
+
+ToMathML Rat where
+  toMathML (MkRat num denom) =
+    if (abs num) < (cast denom)
+    then fraction                       num                      denom
+    else mixed (num `div` (cast denom)) (num `mod` (cast denom)) denom
 
 ||| Table of unicode symbols for operators that have an obvious choice
 |||
@@ -178,83 +201,64 @@ namespace MathML
 ||| better - with the caveat that it only works in Firefox without a
 ||| polyfill.
 symbols : String -> Maybe VDom
-symbols "exch"   = Just (t          "\u{2B0D}")
-symbols "add"    = Just (t                 "+")
-symbols "sub"    = Just (t                 "-")
-symbols "mul"    = Just (t                 "⨉")
-symbols "div"    = Just (t                 "÷")
-symbols "pow"    = Just (t         "x\u{207F}")
-symbols "exp"    = Just (t "\u{1D486}\u{207F}")
-symbols "square" = Just (t         "x\u{00B2}")
-symbols "abs"    = Just (t       "|\u{1D499}|")
-symbols "sqrt"   = Just (t          "\u{221A}")
-symbols "E"      = Just (t         "\u{1D486}")
-symbols "PI"     = Just (t         "\u{1D70B}")
-symbols "frac"   = Just (t          "fraction")
-symbols "fadd"   = Just (t                 "+")
-symbols "fsub"   = Just (t                 "-")
-symbols "fmul"   = Just (t                 "⨉")
-symbols "fdiv"   = Just (t                 "÷")
-symbols "f2"     = Just (math ++ (fraction (Str "x")  (Num    2)))
-symbols "f4"     = Just (math ++ (fraction (Str "x")  (Num    4)))
-symbols "f8"     = Just (math ++ (fraction (Str "x")  (Num    8)))
-symbols "f16"    = Just (math ++ (fraction (Str "x")  (Num   16)))
-symbols "finv"   = Just (math ++ (fraction (Num   1)  (Str  "x")))
+symbols "exch"   = Just (t                        "\u{2B0D}")
+symbols "add"    = Just (t                               "+")
+symbols "sub"    = Just (t                               "-")
+symbols "mul"    = Just (t                               "⨉")
+symbols "div"    = Just (t                               "÷")
+symbols "pow"    = Just (t                       "x\u{207F}")
+symbols "exp"    = Just (t               "\u{1D486}\u{207F}")
+symbols "square" = Just (t                       "x\u{00B2}")
+symbols "abs"    = Just (t                     "|\u{1D499}|")
+symbols "sqrt"   = Just (t                        "\u{221A}")
+symbols "E"      = Just (t                       "\u{1D486}")
+symbols "PI"     = Just (t                       "\u{1D70B}")
+symbols "frac"   = Just (t                        "fraction")
+symbols "fadd"   = Just (t                               "+")
+symbols "fsub"   = Just (t                               "-")
+symbols "fmul"   = Just (t                               "⨉")
+symbols "fdiv"   = Just (t                               "÷")
+symbols "f2"     = Just (fraction "x"                      2)
+symbols "f4"     = Just (fraction "x"                      4)
+symbols "f8"     = Just (fraction "x"                      8)
+symbols "f16"    = Just (fraction "x"                     16)
+symbols "finv"   = Just (fraction   1                    "x")
 symbols _        = Nothing
-
-||| Render a rational number as a fraction or mixed number
-rat : Rat -> VDom
-rat (MkRat num denom) = 
-  if (abs num) < (cast denom)
-  then 
-    let 
-      whole := (t (num `div` (cast denom)))
-      frac  := (fraction (Num num) (Num denom))
-    in div ++ (math ++ (mrow ++ (mn ++ whole) ++ frac))
-  else div ++ (math ++ (fraction (Num num) (Num denom)))
 
 ||| Return a representation of the given value
 display : Common.Value -> VDom
-display (I i)   = div ++ (t (show i))
+display (I   i) = div ++ (t (show i))
 display (F dbl) = div ++ (t (show dbl))
-display (R r)   = div ++ (rat r)
+display (R rat) = div ++ (toMathML rat)
 display (S str) = case symbols str of
   Nothing => t str
   Just d  => d
 display (P sx)  = t "not implemented"
 
-||| Helper for rendering integer values in the accumulator
-|||
-||| The accumulator stores input incrementally as integers, rather
-||| than string values.
-|||
-||| Probably the right thing to do would be to re-factor the
-||| accumulator to store characters or symbols in such a way that it's
-||| unambiguous, and we won't need this function, but for now I'm
-||| trying to stay close to the original JS.
-hide_zero : Integer -> String
-hide_zero 0 = ""
-hide_zero x = show x
-
 ||| Render the accumulator's carret / cursor
-carret : ToString a => a -> VDom
-carret x = case unpack (toString x) of
-  []             => mn ++ (span <: ("id", "carret"))
-  (head :: tail) => mn ++ (t head) ++ (span <: ("id", "carret") ++ (t tail))
-  
+carret : ToString a => Maybe a -> VDom
+carret Nothing  = mi ++ (span <: ("id", "carret"))
+carret (Just v) =
+  let
+    s     = toString v
+    len   = cast (String.length s)
+    end   = len - 1
+    head  = strSubstr 0 end s
+    last  = strSubstr end len s
+  in
+    mi ++ (t head) ++ (span <: ("id", "carret") ++ (t last))
+
 ||| Render the accumulator contents
-|||
-||| XXX: this is sooooo ugllyyyyyyyy :(((
 contents : Accum -> VDom
-contents Empty                = carret ""
-contents (Digits i)           = carret i
-contents (Decimal i j)        = span ++ (t i) ++ (carret (hide_zero j))
-contents (Num i j)            = math ++ (mn ++ (t (hide_zero i))) ++ fraction (Dom (carret (hide_zero j))) (Str "?")
-contents (Denom i j Nothing)  = math ++ (mn ++ (t (hide_zero i))) ++ fraction (Num j)                      (Dom (carret ""))
-contents (Denom i j (Just k)) = math ++ (mn ++ (t (hide_zero i))) ++ fraction (Num j)                      (Dom (carret (hide_zero (cast k))))
-contents (Id var)             = carret (pack (asList var))
+contents Empty         = carret (the (Maybe Nat) Nothing)
+contents (Digits i)    = carret (Just i)
+contents (Decimal i j) = span ++ (t i) ++ (t ".") ++ (carret (Just j))
+contents (Num i j)     = mixed i (carret j) "?"
+contents (Denom i j k) = mixed i j (carret k)
+contents (Id var)      = carret (Just (pack (asList var)))
 
 ||| Render the accumulator
+public export
 render_accum : Accum -> Maybe String -> VDom
-render_accum accum Nothing    = div <: ("id", "accum")                 ++ (contents accum)
-render_accum accum (Just err) = div <: ("id", "accum") <: ("err", err) ++ (contents accum)
+render_accum accum Nothing    = div <: ("id", "accum")                 ++ contents accum
+render_accum accum (Just err) = div <: ("id", "accum") <: ("err", err) ++ contents accum

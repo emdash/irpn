@@ -100,3 +100,9 @@ onEvent Undo       c = undo c
 onEvent Redo       c = redo c
 onEvent Reset      _ = Right new
 
+
+test : SnocList Event -> Either Error Calc
+test Lin        = Right new
+test (events :< event) = do
+  pred <- (test events)
+  onEvent event pred
