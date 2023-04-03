@@ -14,6 +14,8 @@ authors = "brandon"
 
 -- packages to add to search path
 depends = hashmap
+	, indexed
+        , dom
 
 -- modules to install
 -- modules =
@@ -22,8 +24,9 @@ depends = hashmap
 main = Main
 
 -- name of executable
-executable = "irpn"
--- opts =
+executable = "irpn.js"
+opts = "--cg javascript"
+
 sourcedir = "src"
 -- builddir =
 -- outputdir =
