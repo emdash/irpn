@@ -10,20 +10,19 @@ import Calc
 
 
 %default total
-
-
 ||| Like Show, except it doesn't quote strings and characters, as it's
 ||| meant for DOM strings rather than repl/CLI useage.
+public export 
 interface Show t => ToString t where
   toString : t -> String
   toString = show
-ToString String          where toString x = x
-ToString Char            where toString x = pack [x]
-ToString (List Char)     where toString x = pack x
-ToString (SnocList Char) where toString x = pack (asList x)
-ToString Nat             where
-ToString Integer         where
-ToString Double          where
+public export ToString String          where toString x = x
+public export ToString Char            where toString x = pack [x]
+public export ToString (List Char)     where toString x = pack x
+public export ToString (SnocList Char) where toString x = pack (asList x)
+public export ToString Nat             where
+public export ToString Integer         where
+public export ToString Double          where
 
 {- Virtual Dom ************************************************************* -}
 
@@ -45,7 +44,7 @@ ToString Double          where
 ||| : (+:)  => append string on right to parent on left as a text node
 ||| : (<:)  => set the attribute on the right on the node on left
 ||| : (<*)  => (TBD) bind the given event handler on right to node on left
-export
+public export
 data VDom : Type where
   E    :                         String           -> VDom
   NS   :               String -> String           -> VDom
@@ -59,15 +58,15 @@ infixl 10 <:
 infixl 10 +:
 infixl 10 +*
 
-div    : VDom ; div    = E "div"
-span   : VDom ; span   = E "span"
-h1     : VDom ; h1     = E "h1"
-button : VDom ; button = E "button"
-li     : VDom ; li     = E "li"
-ul     : VDom ; ul     = E "ul"
-tr     : VDom ; tr     = E "tr"
-td     : VDom ; td     = E "td"
-table  : VDom ; table  = E "table"
+public export div    : VDom ; div    = E "div"
+public export span   : VDom ; span   = E "span"
+public export h1     : VDom ; h1     = E "h1"
+public export button : VDom ; button = E "button"
+public export li     : VDom ; li     = E "li"
+public export ul     : VDom ; ul     = E "ul"
+public export tr     : VDom ; tr     = E "tr"
+public export td     : VDom ; td     = E "td"
+public export table  : VDom ; table  = E "table"
 
 ||| Construct real DOM tree from a VDom tree, in the JSIO monad.
 |||
@@ -302,7 +301,7 @@ namespace Test
   trender (x +* xs)   = foldl (append) (trender x) (map trender xs)
 
   public export partial
-  pprint : TestDom -> Nat -> IO ()
+  pprint  : TestDom -> Nat -> IO ()
   pprint (Element _ tag attrs children) depth = do
     let attrs = joinBy " " (map (\(k, v) => k ++ ": " ++ v) (asList attrs))
     putStrLn ((indent depth " ") ++ tag ++ " " ++ attrs)

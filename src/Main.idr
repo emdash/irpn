@@ -20,39 +20,38 @@
 ||| This is an idris port of my JavaScript RPN Calculator
 module Main
 
+import Control.Monad.Either
 import Data.String
-
-import Control.Monad.Indexed.State
 import JS
+import Web.Internal.Types
+import Web.Raw.Dom
 import Web.Dom
-import Web.Html
-import Web.Internal.DomPrim
-import Web.Raw.UIEvents
+
+
+app : JSIO ()
+app = do
+  Just root <- getElementById !document "state" | Nothing => pure ()
+  foo       <- createElement' !document "div"
+  ignore $ root `replaceChildren` [Z (foo :> Node)]
+  pure ()
+
+main : IO ()
+main = runJS app
+
+{-
 import Calc
 import Input
 import Render
-
-
-
-
-
-
-renderAccum : Accum -> JSIO Div
-renderAccum accum = do
-  ret     <- createElement Div
-  content <- createElement Div
-  ignore $ appendChild ret content
-  pure ret
-
-
-export
-render : Div -> Calc -> JSIO ()
-render element calc = do
-  innerHTML element .= ""  
-  element `appendChild` 
-  
-
-
-
-main : IO ()
-main = runJS (render Calc.new)
+  let 
+    update : Key -> JSIO ()
+    update key := do
+      innerHTML root .= ""
+      
+      case enterKey key accum of
+        Nothing    => !window.alert "ouch"
+        Just accum => app accum
+   
+   root `appendChild` "1" (key (update (Dig 1)))
+   root `appendChild` "2" (key (update (Dig 2)))
+   root `appendChild` "/" (key (update Frac))
+   -}
