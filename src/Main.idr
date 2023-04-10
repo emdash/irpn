@@ -26,32 +26,58 @@ import JS
 import Web.Internal.Types
 import Web.Raw.Dom
 import Web.Dom
-
-
-app : JSIO ()
-app = do
-  Just root <- getElementById !document "state" | Nothing => pure ()
-  foo       <- createElement' !document "div"
-  ignore $ root `replaceChildren` [Z (foo :> Node)]
-  pure ()
-
-main : IO ()
-main = runJS app
-
-{-
 import Calc
 import Input
 import Render
-  let 
-    update : Key -> JSIO ()
-    update key := do
-      innerHTML root .= ""
-      
-      case enterKey key accum of
-        Nothing    => !window.alert "ouch"
-        Just accum => app accum
-   
-   root `appendChild` "1" (key (update (Dig 1)))
-   root `appendChild` "2" (key (update (Dig 2)))
-   root `appendChild` "/" (key (update Frac))
-   -}
+
+||| High level wrapper for binding event listeners
+|||
+||| The low level addEventListener really requires way too much
+||| boilerplate, which I am hiding away here. The attributes interface
+||| is too high-level / complicated for where I'm at right now.
+on : Element -> String -> (Types.Event -> IO ()) -> JSIO ()
+on element event handler = do
+  handler <- toEventListener handler
+  ignore $ addEventListener element event (Just handler)
+
+mutual
+  onclick : Accum -> String -> Key -> Types.Event -> IO ()
+  onclick accum msg k _ = do
+    consoleLog msg
+    update (enterKey k accum)
+
+  key : Accum -> String -> Key -> JSIO Element
+  key accum label k = do
+    ret <- createElement  !document "button"
+    txt <- createTextNode !document label
+    ignore $ appendChild      ret txt
+    on ret "click" (onclick accum "foo" k)
+    pure ret
+    
+    
+  ||| Re-render the application state in JSIO
+  render : Accum -> JSIO ()
+  render accum = do
+    -- get the root element from the dom
+    Just root <- getElementById !document "state" | Nothing => consoleLog "WTF"
+    
+    -- render the new contents
+    contents  <- vrender (render_accum accum Nothing)
+
+    -- replace the old contents with the new contents
+    ignore $ replaceChildren root [inject $ contents :> Node]
+    
+    -- xxx: this is temporary
+    ignore $ appendChild     root !(key accum "1" (Dig One))
+    ignore $ appendChild     root !(key accum "2" (Dig Two))
+    ignore $ appendChild     root !(key accum "/" Frac)
+    
+
+  ||| Update the application state
+  update : Maybe Accum -> IO ()
+  update Nothing      = do pure ()
+  update (Just accum) = do runJS (render accum)
+
+
+main : IO ()
+main = update (Just Empty)

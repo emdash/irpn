@@ -78,10 +78,10 @@ public export table  : VDom ; table  = E "table"
 public export partial
 vrender : VDom -> JSIO Element
 vrender (E tag) = do
-  ret <- createElement'   !document tag
+  ret <- createElement   !document tag
   pure ret
 vrender (NS ns tag) = do
-  ret <- createElementNS' !document (Just ns) tag
+  ret <- createElementNS !document (Just ns) tag
   pure ret
 vrender (x <: (k, v)) = do
   ret <- vrender x

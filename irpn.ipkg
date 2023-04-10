@@ -18,7 +18,10 @@ depends = hashmap
         , dom
 
 -- modules to install
--- modules =
+modules = Render
+        , Main
+	, Calc
+
 
 -- main file (i.e. file to load at REPL)
 main = Main
