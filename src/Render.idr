@@ -7,6 +7,7 @@ import Web.Dom
 import Common
 import Input
 import Calc
+import State
 
 
 %default total
@@ -25,6 +26,13 @@ public export ToString Integer         where
 public export ToString Double          where
 
 {- Virtual Dom ************************************************************* -}
+
+||| High level type for signal handlers in the VDom
+|||
+||| Everything is assumed to update the calculator state
+public export
+Handler : Type
+Handler = (String, Types.Event -> IO ()) 
 
 ||| Quick-and-Dirty Virtual Dom
 |||
@@ -52,6 +60,7 @@ data VDom : Type where
   (+:) : ToString a => VDom   -> a                -> VDom
   (++) :               VDom   -> VDom             -> VDom
   (+*) :               VDom   -> List VDom        -> VDom
+  (<*) :               VDom   -> Handler          -> VDom
 
 -- XXX: are we sure the fixity and priority are right here?
 infixl 10 <:
@@ -67,6 +76,23 @@ public export ul     : VDom ; ul     = E "ul"
 public export tr     : VDom ; tr     = E "tr"
 public export td     : VDom ; td     = E "td"
 public export table  : VDom ; table  = E "table"
+
+||| High level wrapper for binding event listeners
+|||
+||| The low level addEventListener really requires way too much
+||| boilerplate, which I am hiding away here. The attributes interface
+||| is too high-level / complicated for where I'm at right now.
+on : Element -> String -> (Types.Event -> IO ()) -> JSIO ()
+on element event handler = do
+  handler <- toEventListener handler
+  ignore $ addEventListener element event (Just handler)
+  
+||| This wraps up calculator state changes
+doAction : (Calc -> IO ()) -> Calc -> Calc.Event -> IO ()
+doAction update calc action = do
+  case Calc.onEvent action calc of
+    Left err  => do consoleLog err
+    Right err => do update calc
 
 ||| Construct real DOM tree from a VDom tree, in the JSIO monad.
 |||
@@ -103,6 +129,11 @@ vrender (x +* ys) = do
     child <- vrender c
     ignore $ parent `appendChild` child
   pure parent
+vrender (x <* (event, action)) = do
+  parent <- vrender x
+  on parent event action
+  pure parent
+
 
 
 {- Quick-and-Dirty DSL for the subset of MathML I use in this project ****** -}
@@ -269,7 +300,27 @@ render_accum accum err =
     Nothing    => ret
     Just err   => ret <: ("err", err)
   ++ contents accum
+  
+  
+public export
+render_calc : Calc -> Maybe String -> VDom
+render_calc calc err = render_accum calc.state.accum err
 
+{-
+  key : Accum -> String -> Key -> JSIO Element
+  key accum label k = do
+    ret <- createElement  !document "button"
+    txt <- createTextNode !document label
+    ignore $ appendChild      ret txt
+    on ret "click" (onclick accum "foo" k)
+    pure ret
+  where 
+    onclick : Accum -> String -> Key -> Types.Event -> IO ()
+    onclick accum msg k _ = do
+      consoleLog msg
+      update (enterKey k accum)
+
+-}
 
 ||| Some helper functions for testing tree rendering in the repl.
 namespace Test
