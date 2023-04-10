@@ -26,6 +26,7 @@ import JS
 import Web.Internal.Types
 import Web.Raw.Dom
 import Web.Dom
+import Common
 import Calc
 import Input
 import Render
@@ -33,23 +34,39 @@ import Render
 
 mutual    
   ||| Render the dom for the given calculator state
-  render : Calc -> (Maybe Calc -> IO ()) -> JSIO ()
-  render calc update = do
-    -- get the root element from the dom
+  |||
+  ||| Rendering is affected by whether the previous operation resulted
+  ||| in an error.
+  |||
+  ||| Despite teh VDom layer, I don't do any dom diffing or make any
+  ||| effort to optimize dom updates. It just re-renders the entire
+  ||| tree with each state change.
+  render : Calc -> Maybe Error -> JSIO ()
+  render calc err = do
     Just root <- getElementById !document "state" | Nothing => consoleLog "WTF"
-    
-    -- render the new contents
-    contents  <- vrender (render_calc calc Nothing)
- 
-    -- replace the old contents with the new contents
+    -- note that we're capturing calc here in the `doAction` closure.
+    contents  <- vrender (doAction calc) (render_calc calc err)
     ignore $ replaceWith root [inject $ contents :> Node]
-    
+        
+  ||| Helper for binding actions in the virtual dom
+  |||
+  ||| This has to be defined here on account of the mutual recursion
+  ||| between update and render.
+  |||
+  ||| XXX: look for other ways to factor this?
+  |||
+  ||| Basically, this will trigger an update and re-render in response
+  ||| to DOM events, which get translated to calculator events through
+  ||| the magic of the virtual dom.
+  doAction : Calc -> Calc.Event -> ignored -> IO ()
+  doAction prev action _ = case Calc.onEvent action prev of
+    Left err   => update prev (Just err)
+    Right next => update next Nothing
 
-  ||| Update the application state
-  update : Maybe Calc -> IO ()
-  update Nothing     = do pure ()
-  update (Just calc) = do runJS (render calc update)
+  ||| Update the UI to reflect a change of applicatino state.
+  update : Calc -> Maybe Error -> IO ()
+  update prev err  = runJS (render prev err)
 
 
 main : IO ()
-main = update (Just new)
+main = update new Nothing

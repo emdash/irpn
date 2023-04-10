@@ -29,10 +29,19 @@ public export ToString Double          where
 
 ||| High level type for signal handlers in the VDom
 |||
-||| Everything is assumed to update the calculator state
+||| What we bind to the event is just the action to update the
+||| calculator state.
 public export
 Handler : Type
-Handler = (String, Types.Event -> IO ()) 
+Handler = (String, Calc.Event) 
+
+||| This is the callback passed down from main to do the actual dom
+||| update.
+|||
+||| It's currently very specificly tied to the calculator and its types.
+public export
+UpdateFn : Type
+UpdateFn = Calc.Event -> Types.Event -> IO ()
 
 ||| Quick-and-Dirty Virtual Dom
 |||
@@ -86,13 +95,6 @@ on : Element -> String -> (Types.Event -> IO ()) -> JSIO ()
 on element event handler = do
   handler <- toEventListener handler
   ignore $ addEventListener element event (Just handler)
-  
-||| This wraps up calculator state changes
-doAction : (Calc -> IO ()) -> Calc -> Calc.Event -> IO ()
-doAction update calc action = do
-  case Calc.onEvent action calc of
-    Left err  => do consoleLog err
-    Right err => do update calc
 
 ||| Construct real DOM tree from a VDom tree, in the JSIO monad.
 |||
@@ -101,37 +103,40 @@ doAction update calc action = do
 ||| What's crucial here is that all the binary operations return the
 ||| left hand side as the result, otherwise the resulting tree would
 ||| have the wrong shape.
+|||
+||| W/R/T event listeners: we translate the dom events to high-level calculator
+||| actions here.
 public export partial
-vrender : VDom -> JSIO Element
-vrender (E tag) = do
+vrender : UpdateFn -> VDom -> JSIO Element
+vrender _ (E tag) = do
   ret <- createElement   !document tag
   pure ret
-vrender (NS ns tag) = do
+vrender _ (NS ns tag) = do
   ret <- createElementNS !document (Just ns) tag
   pure ret
-vrender (x <: (k, v)) = do
-  ret <- vrender x
+vrender update (x <: (k, v)) = do
+  ret <- vrender update x
   setAttribute ret k v
   pure ret
-vrender (x +: str) = do
-  parent <- vrender x
+vrender update (x +: str) = do
+  parent <- vrender update x
   text <- createTextNode !document (toString str)
   ignore $ parent `appendChild` text
   pure parent
-vrender (x ++ y) = do
-  parent <- vrender x
-  child  <- vrender y
+vrender update (x ++ y) = do
+  parent <- vrender update x
+  child  <- vrender update y
   ignore $ parent `appendChild` child
   pure parent
-vrender (x +* ys) = do
-  parent <- vrender x
+vrender update (x +* ys) = do
+  parent <- vrender update x
   for_ ys $ \c => do
-    child <- vrender c
+    child <- vrender update c
     ignore $ parent `appendChild` child
   pure parent
-vrender (x <* (event, action)) = do
-  parent <- vrender x
-  on parent event action
+vrender update (x <* (event, action)) = do
+  parent <- vrender update x
+  on parent event (update action)
   pure parent
 
 
@@ -300,11 +305,6 @@ render_accum accum err =
     Nothing    => ret
     Just err   => ret <: ("err", err)
   ++ contents accum
-  
-  
-public export
-render_calc : Calc -> Maybe String -> VDom
-render_calc calc err = render_accum calc.state.accum err
 
 {-
   key : Accum -> String -> Key -> JSIO Element
@@ -321,6 +321,15 @@ render_calc calc err = render_accum calc.state.accum err
       update (enterKey k accum)
 
 -}
+  
+||| Render the entire calculator
+|||
+||| XXX: this is work in progress
+public export
+render_calc : Calc -> Maybe String -> VDom
+render_calc calc err = render_accum calc.state.accum err
+
+
 
 ||| Some helper functions for testing tree rendering in the repl.
 namespace Test
