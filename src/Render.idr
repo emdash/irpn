@@ -54,7 +54,7 @@ public export ToString Double          where
 ||| calculator state.
 public export
 Handler : Type
-Handler = (String, Calc.Event) 
+Handler = (String, Calc.Action) 
 
 ||| This is the callback passed down from main to do the actual dom
 ||| update.
@@ -62,7 +62,7 @@ Handler = (String, Calc.Event)
 ||| It's currently very specificly tied to the calculator and its types.
 public export
 UpdateFn : Type
-UpdateFn = Calc.Event -> Types.Event -> IO ()
+UpdateFn = Calc.Action -> Types.Event -> IO ()
 
 ||| Quick-and-Dirty Virtual Dom
 |||
@@ -125,8 +125,8 @@ on element event handler = do
 ||| left hand side as the result, otherwise the resulting tree would
 ||| have the wrong shape.
 |||
-||| W/R/T event listeners: we translate the dom events to high-level calculator
-||| actions here.
+||| W/R/T event listeners: we translate the dom events to high-level
+||| calculator actions here, using the update function given.
 public export partial
 vrender : UpdateFn -> VDom -> JSIO Element
 vrender _ (E tag) = do
@@ -224,11 +224,11 @@ ToMathML Rat where
 
 
 ||| Renders a labeled container
-container : String -> VDom -> VDom
+container : String -> String -> VDom
 container id name = div
   <: ("id",        id)
   <: ("class", "grid")
-  ++ (h1 ++ name)
+  ++ (h1 +: name)
 
 ||| Constructs a group of items representing a mutually-exclusive choice
 |||
@@ -342,14 +342,53 @@ render_accum accum err =
       update (enterKey k accum)
 
 -}
+
+public export
+tools : VDom
+tools = div
+  <: ("id", "tools")
+  +* [
+    button +: "Clear" <* ("click", Key Clear),
+    button +: "Reset" <* ("click", Reset),
+    button +: "Undo"  <* ("click", Undo ),
+    button +: "Redo"  <* ("click", Redo )
+  ]
+  
+public export
+stack : VDom
+stack = container "stack-container" "Stack"
+
+public export
+vars : VDom
+vars = container "vars-container" "Vars"
+
+public export
+tape : VDom
+tape = container "tape-container" "Tape"
+
+-- XXX: rename me -> keyboard.
+-- stick with original name until all of rpncalc.js is ported.
+public export
+content : VDom
+content = div <: ("id", "content")
+
   
 ||| Render the entire calculator
 |||
 ||| XXX: this is work in progress
 public export
 render_calc : Calc -> Maybe String -> VDom
-render_calc calc err = render_accum calc.state.accum err
-
+render_calc calc err = 
+  div 
+    <: ("id",      "state")
+    <: ("showing", calc.showing)
+    +* [
+      tools,
+      stack,
+      vars,
+      content,
+      render_accum calc.state.accum err
+    ]
 
 
 ||| Some helper functions for testing tree rendering in the repl.

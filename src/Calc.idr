@@ -33,13 +33,15 @@ record Calc where
   state   : State
   history : List State
   undone  : List State
+  showing : String
 
 ||| User Input supported by the calculator.
 public export
-data Event
+data Action
   = Key    Input.Key 
   | Apply  String
   | Enter
+  | Show   String
   | Define
   | Undo
   | Redo
@@ -84,24 +86,28 @@ redo calc = case calc.undone of
     undone  := xs
   } calc)
   
+show : String -> Calc -> Either Error Calc
+show layout calc = Right ({ showing := layout } calc)
+ 
+  
 ||| Return an empty calculator state
 public export
 new : Calc
-new = MkCalc init [] []
+new = MkCalc init [] [] "basic"
     
 ||| Try to handle an input event
 public export
-onEvent : Event -> Calc -> Either Error Calc
+onEvent : Action -> Calc -> Either Error Calc
 onEvent (Key    x) c = tryOperation (input x)  c
 onEvent (Apply fn) c = tryOperation (apply fn) c
 onEvent Enter      c = tryOperation enter      c
 onEvent Define     c = tryOperation define     c
-onEvent Undo       c = undo c
-onEvent Redo       c = redo c
+onEvent (Show s)   c = show s                  c
+onEvent Undo       c = undo                    c
+onEvent Redo       c = redo                    c
 onEvent Reset      _ = Right new
 
-
-test : SnocList Event -> Either Error Calc
+test : SnocList Action -> Either Error Calc
 test Lin        = Right new
 test (events :< event) = do
   pred <- (test events)
