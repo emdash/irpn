@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+
+<!-- This file is part of irpn.
+
+(c) 2023 Brandon Lewis
+
+rpncalc is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License as
+published by the Free Software Foundation, either version 3 of the
+License, or (at your option) any later version.
+
+rpncalc is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Affero General Public License for more details.
+
+You should have received a copy of the GNU Affero General Public License
+along with rpncalc.  If not, see <https://www.gnu.org/licenses/>. -->
+
+
+<html>
+  <head>
+    <meta
+      charset="utf-8"
+      name="viewport"
+      content="width=device-width, height=device-height, initial-scale=1 user-scalable=no"
+    >
+    <title>RPN Calculator</title>
+    <style>
+      html {
+	  font-size: 4vw;
+	  background-color: #FFFFFF;
+      }
+
+      h1 {
+	  font-size: 1rem;
+      }
+      
+      body {
+	  display: block;
+	  font-family: "mono";
+	  user-select: none;
+      }
+
+      button {
+	  display: inline-block;
+	  border: none;
+	  text-align: center;
+	  font-weight: bold;
+	  background-color: #dddddd;
+	  font-size: inherit;
+      }
+
+      button:hover {
+	  font-weight: bold;
+      }
+
+      button:active {
+	  background: black;
+	  color: white;
+      }
+
+      button[selected="true"] {
+	  background: #aaaaaa;
+      }
+
+      .symbol {
+	  border-radius: 0.75rem;
+      }
+
+      #state {
+	  background-color: #eeeeee;
+	  display: grid;
+	  position: absolute;
+	  top: 0;
+	  right: 0;
+	  bottom: 0;
+	  left: 0;
+	  grid-gap: 0.5rem;
+	  grid-template: 3rem 1fr 2fr 3rem / 1fr 1fr;
+	  grid-template-areas:
+	      "a a t t"
+	      "s s v v"
+	      "c c c c"
+	      "m m m m";
+      }
+
+      /* Grid for landscape-like aspect ratios 
+       *
+       * Just pillar-box the portrait layout, adjusting font size
+       * down.
+       */
+      @media (min-aspect-ratio: 4/5) {
+	  html {
+	      font-size: 2vw;
+	  }
+
+	  #state {
+	      left: 20%;
+	      right: 20%;
+	  }
+      }
+
+      /* The content area subgrid */
+      #content {
+	  grid-area: c;
+	  display: grid;
+	  grid-gap: 0.5rem;
+      }
+
+      /* Mode */
+      #mode {
+	  grid-area: m;
+	  display: flex;
+	  grid-template-rows: 1fr;
+	  grid-template-columns: repeat(12, 1fr);
+	  grid-gap: 0.5rem;
+	  background-color: #dddddd;
+      }
+
+      #tools {
+	  grid-area: t;
+	  display: flex;
+	  justify-content: space-between;
+	  grid-gap: 0.5rem;
+      }
+
+      #tools > button[selected="true"] {
+	  background-color: #aaaaaa;
+      }
+
+      #stack-container {
+	  grid-area: s;
+	  grid-template-rows: repeat(24, 1fr);
+	  overflow-y: auto;
+	  overflow-x: hidden;
+      }
+
+      #stack-container div {
+	  margin-left: 0.25rem;
+	  padding: 0.25em;
+	  overflow: hidden;
+	  text-overflow: ellipsis;
+	  margin-bottom: 0.25rem;
+	  background-color: #dddddd;
+	  border-radius: 0.5em;
+	  text-align: center;
+      }
+
+      #vars-container {
+	  grid-area: v;
+	  display: grid;
+	  grid-template-columns: repeat(3, 1fr);
+	  grid-auto-rows: 2rem;
+	  grid-gap: 0.25rem;
+	  overflow-y: auto;
+	  overflow-x: hidden;
+      }
+
+      #vars-container button {
+	  overflow: hidden;
+	  text-overflow: ellipsis;
+      }
+
+      #tape-container {
+	  grid-area: c;
+	  overflow-x: hidden;
+	  overflow-y: auto;
+	  
+      }
+
+      #tape-container div {
+	  margin-left: 0.25rem;
+	  margin-right: 0.25rem;
+	  padding: 0.25em;
+	  overflow: hidden;
+	  text-overflow: ellipsis;
+	  margin-bottom: 0.25rem;
+	  background-color: #dddddd;
+	  border-radius: 0.5em;
+	  text-align: center;
+      }
+
+      #accum {
+	  grid-area: a;
+	  vertical-align: middle;
+	  margin: 0;
+	  padding: 0.5rem;
+	  background-color: #ddffcc;
+	  font-size: 1.5rem;
+	  display: flex;
+	  flex-direction: row;
+	  align-items: stretch;
+	  justify-content: space-between;
+      }
+
+      #accum[err] {
+	  animation: 0.1s ease-out both error_flash;
+      }
+
+      #err {
+	  background:none;
+	  text-align: center;
+	  padding: 0;
+	  margin: 0;
+	  color: #ff6920;
+	  font-size: xx-large;
+      }
+
+      #accum math, #accum math * {
+	  font-family: "mono";
+      }
+
+      #carret {
+	  display: inline-block;
+	  font-weight: bold;
+	  font-style: underline;
+	  animation: 0.375s linear infinite condemned_blink_effect;
+	  margin: 0;
+	  padding: 0;
+      }
+
+      #carret:empty::after {
+	  content: "\00a0";
+      };
+
+      h1 {
+	  display: grid;
+	  font-family: "arial";
+	  margin: 0.25rem;
+	  font-size: 0.5rem;
+      }
+
+      @keyframes condemned_blink_effect {
+	  0% {
+	      text-decoration: none;
+	  }
+	  30% {
+	      text-decoration: none;
+	  }
+	  100% {
+	      text-decoration: underline 0.0625em;;
+	  }
+      }
+
+      @keyframes error_flash {
+	  0%   { background-color: #ff6920; }
+	  100% { background-color: #ddffcc; }
+      }
+    </style>
+  </head>
+  <body>
+    <script src="build/exec/irpn.js" lang="javascript"></script>
+  </body>
+</html>
