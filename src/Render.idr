@@ -66,8 +66,8 @@ UpdateFn = Calc.Action -> Types.Event -> IO ()
 
 ||| Quick-and-Dirty Virtual Dom
 |||
-||| I introduced this to keep the rendering code pure, to avoid having
-||| to construct everything within the JSIO monad.
+||| I introduced this to keep the rendering layer pure, pushing the
+||| JSIO monad to the top-level.
 |||
 ||| This data-type represents *operations* on dom elements, so it is
 ||| inverted relative to the DOM. `vrender` builds the resulting DOM
@@ -161,7 +161,6 @@ vrender update (x <* (event, action)) = do
   pure parent
 
 
-
 {- Quick-and-Dirty DSL for the subset of MathML I use in this project ****** -}
 
 
@@ -218,6 +217,15 @@ ToMathML Rat where
         num   := (num `mod` (cast denom))
       in
         mixed whole num denom
+        
+||| Now implement for arbitrary stack values
+ToMathML Common.Value where
+  toMathML (I i)   = toMathML i
+  toMathML (F dbl) = toMathML dbl
+  toMathML (R x)   = toMathML x
+  toMathML (S str) = toMathML str
+  toMathML (P sx)  = mi +: "Not Implemented"
+  
 
 
 {- Other Helper Functions ************************************************** -}
@@ -276,22 +284,11 @@ symbols "f8"     = Just (fraction "x"   8)
 symbols "f16"    = Just (fraction "x"  16)
 symbols "finv"   = Just (fraction 1   "x")
 symbols _        = Nothing
-
-||| Return a representation of the given value
-display : Common.Value -> VDom
-display (I   i) = div +: i
-display (F dbl) = div +: dbl
-display (R rat) = math ++ (toMathML rat)
-display (S str) = case symbols str of
-  Nothing => div +: str
-  Just d  => d
-display (P sx)  = span +: "not implemented"
-
-||| Render the accumulator's carret / cursor
+||| Render the accumulator's blinky cursor
 |||
 ||| Given a string-representable value, it will return a VDom element
-||| where the last character has been wrapped in the carret element,
-||| so that CSS rules can match on it.
+||| where the last character has been wrapped in an element with the
+||| carret ID, so that special CSS rules can match on it.
 carret : ToString a => Maybe a -> VDom
 carret Nothing  = span <: ("id", "carret")
 carret (Just v) =
@@ -355,8 +352,8 @@ tools = div
   ]
   
 public export
-stack : VDom
-stack = container "stack-container" "Stack"
+stack : List Common.Value -> VDom
+stack vs = container "stack-container" "Stack" +* (map toMathML vs)
 
 public export
 vars : VDom
@@ -384,8 +381,7 @@ render_calc calc err =
     <: ("showing", calc.showing)
     +* [
       tools,
-      stack,
-      vars,
+      stack calc.state.stack,
       content,
       render_accum calc.state.accum err
     ]
