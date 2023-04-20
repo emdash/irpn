@@ -33,12 +33,20 @@ data Rat = MkRat Integer Nat
 
 ||| Translate a maybe value to an Either
 |||
-||| XXX: I'm sure there's a standard library function that does this,
-||| I just can't be arsed to look for it.
+||| XXX: I'm sure there's a standard library function that does this.
 public export
 fromMaybe : b -> Maybe a -> Either b a
 fromMaybe x Nothing  = Left  x
 fromMaybe x (Just y) = Right y
+
+||| Combinator for working with maybes
+|||
+||| XXX: Probably a standard library function that does this.
+public export
+tryWith : (a -> Maybe b) -> (a -> b) -> a -> b
+tryWith try otherwise x = case try x of
+  Nothing => otherwise x
+  Just y  => y
 
 ||| Type of all values
 public export
