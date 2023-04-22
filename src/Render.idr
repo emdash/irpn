@@ -2,17 +2,17 @@
   (c) 2023 Brandon Lewis
 
   This file is part of irpn.
-  
+
   rpncalc is free software: you can redistribute it and/or modify it
   under the terms of the GNU Affero General Public License as
   published by the Free Software Foundation, either version 3 of the
   License, or (at your option) any later version.
-  
+
   rpncalc is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
   Affero General Public License for more details.
-  
+
   You should have received a copy of the GNU Affero General Public License
   along with rpncalc.  If not, see <https://www.gnu.org/licenses/>.
 -}
@@ -305,6 +305,8 @@ container id name contents =
   div ["id" ::= id, "class" ::= "grid"] (h1 () name, contents)
 
 ||| Creates a small list of mutually-exclusive choices.
+|||
+||| The selected choice is given a special attribute
 radioGroup : String -> List (String, VDom) -> List VDom
 radioGroup _                          [] = []
 radioGroup selected ((key, label) :: xs) = let
@@ -429,11 +431,16 @@ public export
 tape : VDom
 tape = container "tape-container" "Tape" "not implemented"
 
--- XXX: rename me -> keyboard.
--- stick with original name until all of rpncalc.js is ported.
 public export
-content : VDom
-content = div ("id" ::= "content") ()
+keypad : VDom
+keypad = div ("id" ::= "content") ()
+
+public export
+content : Calc -> VDom
+content calc =
+  if calc.showing == "keyboard"
+  then tape
+  else keypad
 
 ||| Render the entire calculator
 |||
@@ -446,6 +453,6 @@ render_calc calc err =
     [
       tools,
       stack calc.state.stack,
-      content,
+      content calc,
       render_accum calc.state.accum err
     ]
