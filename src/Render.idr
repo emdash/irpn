@@ -30,6 +30,7 @@ import Common
 import Input
 import Calc
 import State
+import Layout
 
 %default total
 
@@ -225,6 +226,8 @@ mutual
     attach update parent (Right child) = attach update parent child
     attach _      _      _             = pure ()
 
+{- Quick-and-Dirty DSL for the subset of HTML I use -}
+
 div    : Attrs a => Child c => a -> c -> VDom ; div    = E "div"
 span   : Attrs a => Child c => a -> c -> VDom ; span   = E "span"
 h1     : Attrs a => Child c => a -> c -> VDom ; h1     = E "h1"
@@ -235,7 +238,7 @@ tr     : Attrs a => Child c => a -> c -> VDom ; tr     = E "tr"
 td     : Attrs a => Child c => a -> c -> VDom ; td     = E "td"
 table  : Attrs a => Child c => a -> c -> VDom ; table  = E "table"
 
-{- Quick-and-Dirty DSL for the subset of MathML I use in this project ****** -}
+{- Quick-and-Dirty DSL for the subset of MathML I use -}
 
 ||| Create an element in the MathML namespace
 mathml : Attrs a => Child c => String -> a -> c -> VDom
@@ -307,12 +310,12 @@ container id name contents =
 ||| Creates a small list of mutually-exclusive choices.
 |||
 ||| The selected choice is given a special attribute
-radioGroup : String -> List (String, VDom) -> List VDom
+radioGroup : String -> List (String, VDom, Action) -> List VDom
 radioGroup _                          [] = []
-radioGroup selected ((key, label) :: xs) = let
+radioGroup selected ((key, label, action) :: xs) = let
   attrs = if selected == key
-    then ["click" ::> Show key, "selected" ::= "true"]
-    else ["click" ::> Show key]
+    then ["click" ::> action, "selected" ::= "true"]
+    else ["click" ::> action]
   in (button attrs label) :: (radioGroup selected xs)
 
 ||| Table of unicode symbols for operators that have an obvious choice
@@ -442,6 +445,15 @@ content calc =
   then tape
   else keypad
 
+public export
+mode : Calc -> VDom
+mode calc = div
+  ("id" ::= "mode")
+  (radioGroup calc.showing (map item layouts))
+  where
+    item : Layout -> (String, VDom, Action)
+    item lyt = let n = name lyt in (n, T n, Show n)
+
 ||| Render the entire calculator
 |||
 ||| XXX: this is work in progress
@@ -451,6 +463,7 @@ render_calc calc err =
   div
     ("id" ::= "state", "showing" ::= calc.showing)
     [
+      mode calc,
       tools,
       stack calc.state.stack,
       content calc,
