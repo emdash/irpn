@@ -1,18 +1,18 @@
 {-
   (c) 2023 Brandon Lewis
-  
+
   This file is part of irpn.
-  
+
   rpncalc is free software: you can redistribute it and/or modify it
   under the terms of the GNU Affero General Public License as
   published by the Free Software Foundation, either version 3 of the
   License, or (at your option) any later version.
-  
+
   rpncalc is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
   Affero General Public License for more details.
-  
+
   You should have received a copy of the GNU Affero General Public License
   along with rpncalc.  If not, see <https://www.gnu.org/licenses/>.
 -}
@@ -61,7 +61,7 @@ lookup key env = case HashMap.lookup key env of
   Nothing => Left "Invalid Function"
   Just f  => Right f
 
-||| A high-level input token 
+||| A high-level input token
 public export
 data Token = Val Value | Fn String
 
@@ -73,12 +73,12 @@ record State where
   stack : List Value
   tape  : SnocList Token
   env   : Env
-  
+
 ||| Initial state of the calculator
 public export
 init : State
 init = MkState Empty [] Lin builtins
-  
+
 ||| Send an input symbol to the accumulator
 public export
 input : Input.Key -> State -> Either Error State
@@ -93,7 +93,7 @@ public export
 enter : State -> Either Error State
 enter state = do
   value <- Input.value state.accum
-  pure ({ 
+  pure ({
       accum := Empty,
       stack $= (value ::),
       tape  $= (:< (Val value))
@@ -126,13 +126,13 @@ apply name state = do
   state <- enter state
   func  <- lookup name state.env
   stack <- func state.stack
-  pure ({ 
-    stack := stack, 
+  pure ({
+    stack := stack,
     tape $= (:< Fn name)
   } state)
 
 ||| Bind the name at the top of stack to the value immediately below it.
-||| 
+|||
 ||| This will re-bind the name, if it was previously bound.
 public export
 define : State -> Either Error State

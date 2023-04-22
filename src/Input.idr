@@ -1,18 +1,18 @@
 {-
   (c) 2021 Brandon Lewis
-  
+
   This file is part of irpn.
-  
+
   rpncalc is free software: you can redistribute it and/or modify it
   under the terms of the GNU Affero General Public License as
   published by the Free Software Foundation, either version 3 of the
   License, or (at your option) any later version.
-  
+
   rpncalc is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
   Affero General Public License for more details.
-  
+
   You should have received a copy of the GNU Affero General Public License
   along with rpncalc.  If not, see <https://www.gnu.org/licenses/>.
 -}
@@ -40,6 +40,20 @@ data Digit
   | Eight
   | Nine
 
+public export
+Eq Digit where
+  (==) Zero Zero = True
+  (==) One One = True
+  (==) Two Two = True
+  (==) Three Three = True
+  (==) Four Four = True
+  (==) Five Five = True
+  (==) Six Six = True
+  (==) Seven Seven = True
+  (==) Eight Eight = True
+  (==) Nine Nine = True
+  (==) _    _    = False
+
 ||| All tokens recognized by the accumulator
 public export
 data Key : Type where
@@ -48,6 +62,16 @@ data Key : Type where
   Point     : Key
   Frac      : Key
   Clear     : Key
+
+public export
+Eq Key where
+  (==) (Alpha c) (Alpha d) = c == d
+  (==) (Dig   x) (Dig   y) = x == y
+  (==) Point     Point     = True
+  (==) Frac      Frac      = True
+  (==) Clear     Clear     = True
+  (==) _         _         = False
+
 
 ||| Holds and validates user input
 public export
@@ -141,7 +165,7 @@ enterKey (Dig   d) accum = Just (enterDigit accum d)
 enterKey Point     accum = enterPoint accum
 enterKey Frac      accum = enterFrac  accum
 enterKey Clear     _     = Just Empty
-  
+
 ||| Get the value from the accumulator
 |||
 ||| This is only possible when the accumulator contains a complete value.

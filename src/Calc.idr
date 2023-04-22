@@ -1,18 +1,18 @@
 {-
   (c) 2023 Brandon Lewis
-  
+
   This file is part of irpn.
-  
+
   rpncalc is free software: you can redistribute it and/or modify it
   under the terms of the GNU Affero General Public License as
   published by the Free Software Foundation, either version 3 of the
   License, or (at your option) any later version.
-  
+
   rpncalc is distributed in the hope that it will be useful, but
   WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
   Affero General Public License for more details.
-  
+
   You should have received a copy of the GNU Affero General Public License
   along with rpncalc.  If not, see <https://www.gnu.org/licenses/>.
 -}
@@ -38,7 +38,7 @@ record Calc where
 ||| User Input supported by the calculator.
 public export
 data Action
-  = Key    Input.Key 
+  = Key    Input.Key
   | Apply  String
   | Enter
   | Show   String
@@ -47,6 +47,18 @@ data Action
   | Redo
   | Reset
 
+public export
+Eq Action where
+  (==) (Key   x)  (Key   y)  = x == y
+  (==) (Apply x)  (Apply y)  = x == y
+  (==) Enter      Enter      = True
+  (==) (Show  x)  (Show y)   = x == y
+  (==) Define     Define     = True
+  (==) Undo       Undo       = True
+  (==) Redo       Redo       = True
+  (==) Reset      Reset      = True
+  (==) _          _          = False
+
 ||| Try to perform the given operation
 |||
 ||| If the operation succeeds:
@@ -54,9 +66,9 @@ data Action
 |||  - push old state onto the undo stack
 |||  - clear redo stack.
 ||| If the operation fails: return error message
-tryOperation 
-  :  (State -> Either Error State) 
-  -> Calc   
+tryOperation
+  :  (State -> Either Error State)
+  -> Calc
   -> Either Error Calc
 tryOperation fn calc = do
   next <- fn calc.state
@@ -65,15 +77,15 @@ tryOperation fn calc = do
     history $= (calc.state ::),
     undone  := []
   } calc)
-  
+
 ||| Try to restore the previous state
 undo : Calc -> Either Error Calc
 undo calc = case calc.history of
   []      => Left  "History is empty"
   x :: xs => Right ({
-    state   := x, 
-    history := xs, 
-    undone  $= (x ::) 
+    state   := x,
+    history := xs,
+    undone  $= (x ::)
   } calc)
 
 ||| Try to redo an undone action
@@ -85,16 +97,16 @@ redo calc = case calc.undone of
     history $= (x ::),
     undone  := xs
   } calc)
-  
+
 show : String -> Calc -> Either Error Calc
 show layout calc = Right ({ showing := layout } calc)
- 
-  
+
+
 ||| Return an empty calculator state
 public export
 new : Calc
 new = MkCalc init [] [] "basic"
-    
+
 ||| Try to handle an input event
 public export
 onEvent : Action -> Calc -> Either Error Calc
