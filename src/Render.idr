@@ -1,6 +1,6 @@
 {-
   (c) 2023 Brandon Lewis
-  
+
   This file is part of irpn.
   
   rpncalc is free software: you can redistribute it and/or modify it
@@ -21,6 +21,7 @@
 ||| This module implements application-specific rendering
 module Render
 
+import Data.List
 import Data.String
 import JS
 import Web.Dom
@@ -30,31 +31,48 @@ import Input
 import Calc
 import State
 
-
 %default total
-||| Like Show, except it doesn't quote strings and characters, as it's
-||| meant for DOM strings rather than repl/CLI useage.
-public export 
+
+
+||| Convert a value to a string
+|||
+||| Works exactly like Show, except that strings aren't quoted, which
+||| we would only want to do explicitly for DOM strings.
+|||
+||| We could also perform HTML escaping here, although I think the
+||| official DOM library might do this. Does it?
 interface Show t => ToString t where
   toString : t -> String
   toString = show
-public export ToString String          where toString x = x
-public export ToString Char            where toString x = pack [x]
-public export ToString (List Char)     where toString x = pack x
-public export ToString (SnocList Char) where toString x = pack (asList x)
-public export ToString Nat             where
-public export ToString Integer         where
-public export ToString Double          where
+
+
+||| Special case for String: just return yourself.
+ToString String          where toString x = x
+ToString (List Char)     where toString x = pack x
+ToString Char            where toString x = pack [x]
+ToString (SnocList Char) where toString x = pack (asList x)
+ToString Nat             where
+ToString Integer         where
+ToString Double          where
+
+{- XXX:
+
+I tried adding:
+
+  Show a => ToString a     where
+
+But this causes type checking to fail. It appears idris can't decide
+which method to call, which is disappointing. In C++ there's a notion
+that the most specific template instance "wins", while Rust does
+something similar via "blanket impls".
+
+Maybe idris supports this, I just don't know.
+
+-}
+
 
 {- Virtual Dom ************************************************************* -}
 
-||| High level type for signal handlers in the VDom
-|||
-||| What we bind to the event is just the action to update the
-||| calculator state.
-public export
-Handler : Type
-Handler = (String, Calc.Action) 
 
 ||| This is the callback passed down from main to do the actual dom
 ||| update.
@@ -64,115 +82,170 @@ public export
 UpdateFn : Type
 UpdateFn = Calc.Action -> Types.Event -> IO ()
 
-||| Quick-and-Dirty Virtual Dom
+||| Type for attributes and event listeners
+|||
+||| (::=) : An ordinary attribute, a pun on (:=) which usually means assignment.
+||| (::>) : An event listener, a pun on the the fat arrow in lambda syntax
+public export
+data Attr : Type where
+  (::=) : String -> String      -> Attr
+  (::>) : String -> Calc.Action -> Attr
+
+infixl 10 ::=
+infixl 10 ::>
+
+||| This interface abstracts over different ways of specifying properties
+interface Attrs a where
+  bind : UpdateFn -> Element -> a -> JSIO ()
+
+||| You may not have any properties to bind.
+Attrs () where
+  bind _ _ _ = pure ()
+
+||| You may bind a single property or event handler
+Attrs Render.Attr where
+  bind update element (key ::= value) = do
+    ignore $ setAttribute element key (toString value)
+  bind update element (event ::> action) = do
+    listener <- toEventListener (update action)
+    ignore $ addEventListener element event (Just listener)
+
+||| You may bind a list of attributes and event handlers
+Attrs a => Attrs (List a) where
+  bind update element attrs = do
+    for_ attrs $ \attr => do
+      bind update element attr
+
+||| You may bind a maybe of Attr
+Attrs a => Attrs (Maybe a) where
+  bind update element Nothing  = do pure ()
+  bind update element (Just a) = do bind update element a
+
+||| You may bind pairs and tuples of Attrs
+Attrs a => Attrs b => Attrs (a, b) where
+  bind update element (x, y) = do
+    bind update element x
+    bind update element y
+
+
+||| An interface which child dom nodes must implement.
+interface Child a where
+  attach : UpdateFn -> Element -> a -> JSIO ()
+
+||| A virtual dom subtree
 |||
 ||| I introduced this to keep the rendering layer pure, pushing the
-||| JSIO monad to the top-level.
+||| JSIO monad to the top-level
 |||
-||| This data-type represents *operations* on dom elements, so it is
-||| inverted relative to the DOM. `vrender` builds the resulting DOM
-||| from left to right.
-|||
-||| I may re-factor the code in this module to remove this VDom
-||| layer. Or I could expand it into a proper VDom that does diffing,
-||| or adopt one of the VDom libraries that already exist. I haven't decided.
-|||
-||| : (++)  => append node on right to parent on left
-||| : (+*)  => append list of nodes on right to parent on left
-||| : (+:)  => append string on right to parent on left as a text node
-||| : (<:)  => set the attribute on the right on the node on left
-||| : (<*)  => (TBD) bind the given event handler on right to node on left
+||| Variants:
+||| - T:  Text Nodes
+||| - E:  Standard elements
+||| - NS: Elements with an explicit namespace
 public export
 data VDom : Type where
-  E    :                         String           -> VDom
-  NS   :               String -> String           -> VDom
-  (<:) :               VDom   -> (String, String) -> VDom
-  (+:) : ToString a => VDom   -> a                -> VDom
-  (++) :               VDom   -> VDom             -> VDom
-  (+*) :               VDom   -> List VDom        -> VDom
-  (<*) :               VDom   -> Handler          -> VDom
+  T      : ToString v =>                                     v -> VDom
+  E      : Attrs a    => Child c =>           String -> a -> c -> VDom
+  NS     : Attrs a    => Child c => String -> String -> a -> c -> VDom
 
--- XXX: are we sure the fixity and priority are right here?
-infixl 10 <:
-infixl 10 +:
-infixl 10 +*
+mutual
+  ||| Construct real DOM tree from a VDom tree, in the JSIO monad.
+  |||
+  |||   Thanks to Stephan Hoek for helping in the early stages of this.
+  |||
+  ||| What's crucial here is that all operations return the parent,
+  ||| otherwise the resulting tree would have the wrong shape.
+  |||
+  ||| W/R/T event listeners: we translate the dom events to high-level
+  ||| calculator actions here, using the update function given.
+  public export partial
+  vrender : UpdateFn -> VDom -> JSIO Node
+  vrender update (T value) = do
+    ret <- createTextNode !document (toString value)
+    pure $ ret :> Node
+  vrender update (E tag attrs contents) = do
+    ret <- createElement !document tag
+    bind   update ret attrs
+    attach update ret contents
+    pure $ ret :> Node
+  vrender update (NS ns tag attrs contents) = do
+    ret <- createElementNS !document (Just ns) tag
+    bind   update ret attrs
+    attach update ret contents
+    pure $ ret :> Node
 
-public export div    : VDom ; div    = E "div"
-public export span   : VDom ; span   = E "span"
-public export h1     : VDom ; h1     = E "h1"
-public export button : VDom ; button = E "button"
-public export li     : VDom ; li     = E "li"
-public export ul     : VDom ; ul     = E "ul"
-public export tr     : VDom ; tr     = E "tr"
-public export td     : VDom ; td     = E "td"
-public export table  : VDom ; table  = E "table"
+  ||| You may append nothing at all.
+  Child () where
+    attach _ _ _ = pure ()
 
-||| High level wrapper for binding event listeners
-|||
-||| The low level addEventListener really requires way too much
-||| boilerplate, which I am hiding away here. The attributes interface
-||| is too high-level / complicated for where I'm at right now.
-on : Element -> String -> (Types.Event -> IO ()) -> JSIO ()
-on element event handler = do
-  handler <- toEventListener handler
-  ignore $ addEventListener element event (Just handler)
+  ||| You may append any ToString type.
+  ToString a => Child a where
+    attach _ parent x = do
+      text <- createTextNode !document (toString x)
+      ignore $ parent `appendChild` text
 
-||| Construct real DOM tree from a VDom tree, in the JSIO monad.
-|||
-|||   Thanks to Stephan Hoek for helping in the early stages of this.
-|||
-||| What's crucial here is that all the binary operations return the
-||| left hand side as the result, otherwise the resulting tree would
-||| have the wrong shape.
-|||
-||| W/R/T event listeners: we translate the dom events to high-level
-||| calculator actions here, using the update function given.
-public export partial
-vrender : UpdateFn -> VDom -> JSIO Element
-vrender _ (E tag) = do
-  ret <- createElement   !document tag
-  pure ret
-vrender _ (NS ns tag) = do
-  ret <- createElementNS !document (Just ns) tag
-  pure ret
-vrender update (x <: (k, v)) = do
-  ret <- vrender update x
-  setAttribute ret k v
-  pure ret
-vrender update (x +: str) = do
-  parent <- vrender update x
-  text <- createTextNode !document (toString str)
-  ignore $ parent `appendChild` text
-  pure parent
-vrender update (x ++ y) = do
-  parent <- vrender update x
-  child  <- vrender update y
-  ignore $ parent `appendChild` child
-  pure parent
-vrender update (x +* ys) = do
-  parent <- vrender update x
-  for_ ys $ \c => do
-    child <- vrender update c
-    ignore $ parent `appendChild` child
-  pure parent
-vrender update (x <* (event, action)) = do
-  parent <- vrender update x
-  on parent event (update action)
-  pure parent
+  ||| You may append an arbitrary VDom subtree.
+  Child VDom where
+    attach update parent vchild = do
+      child <- vrender update vchild
+      ignore $ parent `appendChild` child
 
+  ||| You may append pairs and tuples of any otherwise appendable type.
+  Child a => Child b => Child (a, b) where
+    attach update parent (x, y) = do
+      attach update parent x
+      attach update parent y
+
+  ||| You may append a list of any otherwise appendable type.
+  Child a => Child (List a) where
+    attach update parent children = do
+      for_ children $ \child => do
+        attach update parent child
+
+  ||| You may append a maybe of any otherwise appendable type.
+  |||
+  ||| Appending Nothing is allowed, and is a no-op.
+  Child a => Child (Maybe a) where
+    attach update parent Nothing      = pure ()
+    attach update parent (Just child) = attach update parent child
+
+  ||| You may append an either of any two otherwise appendable types.
+  |||
+  ||| This will always insert an element into the dom.
+  Child l => Child r => Child (Either l r) where
+    attach update parent (Left  child) = attach update parent child
+    attach update parent (Right child) = attach update parent child
+
+  ||| You may append an either where only the left child is appendable.
+  Child l => Child (Either l b) where
+    attach update parent (Left child) = attach update parent child
+    attach _      _      _            = pure ()
+
+  ||| You may append an either where only the right child is appendable.
+  Child r => Child (Either a r) where
+    attach update parent (Right child) = attach update parent child
+    attach _      _      _             = pure ()
+
+div    : Attrs a => Child c => a -> c -> VDom ; div    = E "div"
+span   : Attrs a => Child c => a -> c -> VDom ; span   = E "span"
+h1     : Attrs a => Child c => a -> c -> VDom ; h1     = E "h1"
+button : Attrs a => Child c => a -> c -> VDom ; button = E "button"
+li     : Attrs a => Child c => a -> c -> VDom ; li     = E "li"
+ul     : Attrs a => Child c => a -> c -> VDom ; ul     = E "ul"
+tr     : Attrs a => Child c => a -> c -> VDom ; tr     = E "tr"
+td     : Attrs a => Child c => a -> c -> VDom ; td     = E "td"
+table  : Attrs a => Child c => a -> c -> VDom ; table  = E "table"
 
 {- Quick-and-Dirty DSL for the subset of MathML I use in this project ****** -}
 
-
 ||| Create an element in the MathML namespace
-mathml : String -> VDom
+mathml : Attrs a => Child c => String -> a -> c -> VDom
 mathml = NS "http://www.w3.org/1998/Math/MathML"
 
-math  : VDom  ; math  = mathml "math"
-mfrac : VDom  ; mfrac = mathml "mfrac"
-mrow  : VDom  ; mrow  = mathml "mrow"
-mi    : VDom  ; mi    = mathml "mi"
-mn    : VDom  ; mn    = mathml "mn"
+math  : Attrs a => Child c => a -> c -> VDom ; math  = mathml "math"
+mfrac : Attrs a => Child c => a -> c -> VDom ; mfrac = mathml "mfrac"
+mrow  : Attrs a => Child c => a -> c -> VDom ; mrow  = mathml "mrow"
+mi    : Attrs a => Child c => a -> c -> VDom ; mi    = mathml "mi"
+mn    : Attrs a => Child c => a -> c -> VDom ; mn    = mathml "mn"
 
 ||| Type-aware lowering to MathML elements
 interface ToMathML a where
@@ -185,7 +258,7 @@ fraction
   => a
   -> b
   -> VDom
-fraction num denom = (mfrac ++ toMathML num) ++ toMathML denom
+fraction num denom = (mfrac () [toMathML num, toMathML denom])
 
 ||| Render a mixed number from its parts
 mixed
@@ -196,63 +269,49 @@ mixed
   -> n
   -> d
   -> VDom
-mixed int num denom = (mrow ++ toMathML int) ++ fraction num denom
+mixed int num denom = mrow () [toMathML int, fraction num denom]
 
 -- the main thing to note here is that strings and dom elements are
 -- rendered as `mi` while numeric types are rendered as `mn`.
-ToMathML String  where toMathML s = mi +: s
+ToMathML String  where toMathML s = mi () s
 ToMathML VDom    where toMathML v = v
-ToMathML Integer where toMathML i = mn +: i
-ToMathML Double  where toMathML d = mn +: d
-ToMathML Nat     where toMathML n = mn +: n
+ToMathML Integer where toMathML i = mn () i
+ToMathML Double  where toMathML d = mn () d
+ToMathML Nat     where toMathML n = mn () n
 
 ||| Renders a Rat as a mixed number or proper fraction.
 ToMathML Rat where
   toMathML (MkRat num denom) =
     if (abs num) < (cast denom)
     then fraction num denom
-    else
-      let
-        whole := (num `div` (cast denom))
-        num   := (num `mod` (cast denom))
-      in
-        mixed whole num denom
-        
+    else let
+      whole := (num `div` (cast denom))
+      num   := (num `mod` (cast denom))
+    in mixed whole num denom
+
 ||| Now implement for arbitrary stack values
 ToMathML Common.Value where
   toMathML (I i)   = toMathML i
   toMathML (F dbl) = toMathML dbl
   toMathML (R x)   = toMathML x
   toMathML (S str) = toMathML str
-  toMathML (P sx)  = mi +: "Not Implemented"
-  
-
+  toMathML (P sx)  = mi () "Not Implemented"
 
 {- Other Helper Functions ************************************************** -}
 
-
 ||| Renders a labeled container
-container : String -> String -> VDom
-container id name = div
-  <: ("id",        id)
-  <: ("class", "grid")
-  ++ (h1 +: name)
+container : Child c => String -> String -> c -> VDom
+container id name contents =
+  div ["id" ::= id, "class" ::= "grid"] (h1 () name, contents)
 
-||| Constructs a group of items representing a mutually-exclusive choice
-|||
-||| XXX: it'd be interesting to be able to reflect on an ADT and
-||| derive a radioGroup from the constructors, for now just do a more
-||| literal translation.
-|||
-||| XXX: action is missing
+||| Creates a small list of mutually-exclusive choices.
 radioGroup : String -> List (String, VDom) -> List VDom
 radioGroup _                          [] = []
-radioGroup selected ((key, label) :: xs) =
-  let ret = button ++ label
-  in if key == selected
-    then (ret <: ("selected", "true")) :: radioGroup selected xs
-    else ret :: radioGroup selected xs
-
+radioGroup selected ((key, label) :: xs) = let
+  attrs = if selected == key
+    then ["click" ::> Show key, "selected" ::= "true"]
+    else ["click" ::> Show key]
+  in (button attrs label) :: (radioGroup selected xs)
 
 ||| Table of unicode symbols for operators that have an obvious choice
 |||
@@ -261,36 +320,37 @@ radioGroup selected ((key, label) :: xs) =
 ||| better - with the caveat that it only works in Firefox without a
 ||| polyfill.
 symbols : String -> Maybe VDom
-symbols "exch"   = Just (mi +:            "\u{2B0D}")
-symbols "add"    = Just (mi +:                   "+")
-symbols "sub"    = Just (mi +:                   "-")
-symbols "mul"    = Just (mi +:                   "⨉")
-symbols "div"    = Just (mi +:                   "÷")
-symbols "pow"    = Just (mi +:           "x\u{207F}")
-symbols "exp"    = Just (mi +:   "\u{1D486}\u{207F}")
-symbols "square" = Just (mi +:           "x\u{00B2}")
-symbols "abs"    = Just (mi +:         "|\u{1D499}|")
-symbols "sqrt"   = Just (mi +:            "\u{221A}")
-symbols "E"      = Just (mi +:           "\u{1D486}")
-symbols "PI"     = Just (mi +:           "\u{1D70B}")
-symbols "frac"   = Just (mi +:            "fraction")
-symbols "fadd"   = Just (mi +:                   "+")
-symbols "fsub"   = Just (mi +:                   "-")
-symbols "fmul"   = Just (mi +:                   "⨉")
-symbols "fdiv"   = Just (mi +:                   "÷")
+symbols "exch"   = Just (T "\u{2B0D}")
+symbols "add"    = Just (T "+")
+symbols "sub"    = Just (T "-")
+symbols "mul"    = Just (T "⨉")
+symbols "div"    = Just (T "÷")
+symbols "pow"    = Just (T "x\u{207F}")
+symbols "exp"    = Just (T "\u{1D486}\u{207F}")
+symbols "square" = Just (T "x\u{00B2}")
+symbols "abs"    = Just (T "|\u{1D499}|")
+symbols "sqrt"   = Just (T "\u{221A}")
+symbols "E"      = Just (T "\u{1D486}")
+symbols "PI"     = Just (T "\u{1D70B}")
+symbols "frac"   = Just (T "fraction")
+symbols "fadd"   = Just (T "+")
+symbols "fsub"   = Just (T "-")
+symbols "fmul"   = Just (T "⨉")
+symbols "fdiv"   = Just (T "÷")
 symbols "f2"     = Just (fraction "x"   2)
 symbols "f4"     = Just (fraction "x"   4)
 symbols "f8"     = Just (fraction "x"   8)
 symbols "f16"    = Just (fraction "x"  16)
 symbols "finv"   = Just (fraction 1   "x")
 symbols _        = Nothing
+
 ||| Render the accumulator's blinky cursor
 |||
 ||| Given a string-representable value, it will return a VDom element
 ||| where the last character has been wrapped in an element with the
 ||| carret ID, so that special CSS rules can match on it.
 carret : ToString a => Maybe a -> VDom
-carret Nothing  = span <: ("id", "carret")
+carret Nothing  = span ("id" ::= "carret") ()
 carret (Just v) =
   let
     s     = toString v
@@ -298,16 +358,15 @@ carret (Just v) =
     end   = len - 1
     head  = strSubstr 0 end s
     last  = strSubstr end len s
-  in
-    mn +: head ++ (span <: ("id", "carret") +: last)
+  in mn () (head, span ("id" ::= "carret") (), last)
 
 ||| Render the accumulator contents
 contents : Accum -> VDom
 contents Empty         = carret (the (Maybe Nat) Nothing)
 contents (Digits i)    = carret (Just i)
 contents (Decimal i j) = carret (Just (toString i ++ "." ++ toString j))
-contents (Num i j)     = math ++ mixed i (carret j) "?"
-contents (Denom i j k) = math ++ mixed i j          (carret k)
+contents (Num i j)     = math () (mixed i (carret j) "?")
+contents (Denom i j k) = math () (mixed i j (carret k))
 contents (Id var)      = carret (Just var)
 
 ||| Render the accumulator
@@ -316,13 +375,20 @@ contents (Id var)      = carret (Just var)
 ||| element.
 public export
 render_accum : Accum -> Maybe String -> VDom
-render_accum accum err =
-  let
-    ret = div <: ("id", "accum")
-  in case err of
-    Nothing    => ret
-    Just err   => ret <: ("err", err)
-  ++ contents accum
+render_accum accum err = div
+  ("id" ::= "accum", map ("err" ::=) err)
+  (contents accum)
+
+{- In the above:
+
+  map ("err" ::=) err : Maybe String -> Maybe Attr
+
+  ("err" ::=) : String -> Attr
+
+  This seems like a useful idiom for binding properties to maybe
+  values. I could imagine a (::?) operator which handles this.
+-}
+
 
 {-
   key : Accum -> String -> Key -> JSIO Element
@@ -332,7 +398,7 @@ render_accum accum err =
     ignore $ appendChild      ret txt
     on ret "click" (onclick accum "foo" k)
     pure ret
-  where 
+  where
     onclick : Accum -> String -> Key -> Types.Event -> IO ()
     onclick accum msg k _ = do
       consoleLog msg
@@ -343,91 +409,43 @@ render_accum accum err =
 public export
 tools : VDom
 tools = div
-  <: ("id", "tools")
-  +* [
-    button +: "Clear" <* ("click", Key Clear),
-    button +: "Reset" <* ("click", Reset),
-    button +: "Undo"  <* ("click", Undo ),
-    button +: "Redo"  <* ("click", Redo )
-  ]
-  
+  ("id" ::= "tools")
+  (
+    button ("click" ::> Key Clear) "Clear",
+    button ("click" ::> Reset)     "Reset",
+    button ("click" ::> Undo )     "Undo",
+    button ("click" ::> Redo )     "Redo"
+  )
+
 public export
 stack : List Common.Value -> VDom
-stack vs = container "stack-container" "Stack" +* (map toMathML vs)
+stack vs = container "stack-container" "Stack" (map toMathML vs)
 
 public export
 vars : VDom
-vars = container "vars-container" "Vars"
+vars = container "vars-container" "Vars" "not implemented"
 
 public export
 tape : VDom
-tape = container "tape-container" "Tape"
+tape = container "tape-container" "Tape" "not implemented"
 
 -- XXX: rename me -> keyboard.
 -- stick with original name until all of rpncalc.js is ported.
 public export
 content : VDom
-content = div <: ("id", "content")
+content = div ("id" ::= "content") ()
 
-  
 ||| Render the entire calculator
 |||
 ||| XXX: this is work in progress
 public export
 render_calc : Calc -> Maybe String -> VDom
-render_calc calc err = 
-  div 
-    <: ("id",      "state")
-    <: ("showing", calc.showing)
-    +* [
+render_calc calc err =
+  div
+    ("id" ::= "state", "showing" ::= calc.showing)
+    [
       tools,
       stack calc.state.stack,
       content,
       render_accum calc.state.accum err
     ]
-
-
-||| Some helper functions for testing tree rendering in the repl.
-namespace Test
-
-  ||| Emulates the shape of the browser DOM, i.e. not an inverted tree
-  public export
-  data TestDom
-    = Element (Maybe String) String (SnocList (String, String)) (SnocList TestDom)
-    | Text String
-
-  ||| Append child node to existing element on LHS
-  partial
-  append : TestDom -> TestDom -> TestDom
-  append (Element ns tag attrs children) child = 
-          Element ns tag attrs (children :< child)
-
-  partial
-  setAttr : TestDom -> (String, String) -> TestDom
-  setAttr (Element ns tag attrs           children) attr = 
-           Element ns tag (attrs :< attr) children
-
-  public export partial
-  trender : VDom -> TestDom
-  trender (E tag)     = (Element Nothing   tag Lin Lin)
-  trender (NS ns tag) = (Element (Just ns) tag Lin Lin)
-  trender (x <: y)    = (trender x) `setAttr` y
-  trender (x +: y)    = (trender x) `append` (Text (toString y))
-  trender (x ++ y)    = (trender x) `append` (trender y)
-  trender (x +* xs)   = foldl (append) (trender x) (map trender xs)
-
-  public export partial
-  pprint  : TestDom -> Nat -> IO ()
-  pprint (Element _ tag attrs children) depth = do
-    let attrs = joinBy " " (map (\(k, v) => k ++ ": " ++ v) (asList attrs))
-    putStrLn ((indent depth " ") ++ tag ++ " " ++ attrs)
-    for_ children $ \child => do
-      pprint child (depth + 1)
-  pprint (Text t) depth = do
-    putStrLn ((indent depth " ") ++ (show t))
-
-  public export partial
-  taccum : SnocList Key -> IO ()
-  taccum keys = case Input.test keys of
-    Nothing    => putStrLn "empty"
-    Just accum => pprint (trender (render_accum accum Nothing)) 0
