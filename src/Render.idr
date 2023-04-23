@@ -160,7 +160,7 @@ mutual
   ||| calculator actions here, using the update function given.
   public export partial
   vrender : UpdateFn -> VDom -> JSIO Node
-  vrender update (T value) = do
+  vrender _ (T value) = do
     ret <- createTextNode !document (toString value)
     pure $ ret :> Node
   vrender update (E tag attrs contents) = do
