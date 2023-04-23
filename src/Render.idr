@@ -25,6 +25,7 @@ import Data.List
 import Data.String
 import JS
 import Web.Dom
+import Web.Raw.Css
 
 import Common
 import Input
@@ -87,13 +88,25 @@ UpdateFn = Calc.Action -> Types.Event -> IO ()
 |||
 ||| (::=) : An ordinary attribute, a pun on (:=) which usually means assignment.
 ||| (::>) : An event listener, a pun on the the fat arrow in lambda syntax
+||| (::-) : A style property. This requires some special handling.
 public export
 data Attr : Type where
   (::=) : String -> String      -> Attr
   (::>) : String -> Calc.Action -> Attr
+  (::-) : String -> String      -> Attr
 
 infixl 10 ::=
 infixl 10 ::>
+infixl 10 ::-
+
+||| A hack to make setting style properties easier
+|||
+||| XXX: figure out the idiomatic way to this.
+%foreign "javascript:lambda:(e, k, v) => { e.style[k] = v; return 0 }"
+prim__styleHack : Element -> String -> String -> PrimIO Int
+
+styleHack : Element -> String -> String -> JSIO Int
+styleHack e k v = tryJS "Render.styleHack" $ prim__styleHack e k v
 
 ||| This interface abstracts over different ways of specifying properties
 interface Attrs a where
@@ -110,6 +123,9 @@ Attrs Render.Attr where
   bind update element (event ::> action) = do
     listener <- toEventListener (update action)
     ignore $ addEventListener element event (Just listener)
+  bind update element (property ::- value) = do
+    ignore $ styleHack element property value
+    pure ()
 
 ||| You may bind a list of attributes and event handlers
 Attrs a => Attrs (List a) where
@@ -318,36 +334,56 @@ radioGroup selected ((key, label, action) :: xs) = let
     else ["click" ::> action]
   in (button attrs label) :: (radioGroup selected xs)
 
-||| Table of unicode symbols for operators that have an obvious choice
+||| Map actions to button labels
 |||
 ||| For some of these, we can return unicode strings which will work
 ||| anywhere. In the particular case of fractions, MathML looks a lot
 ||| better - with the caveat that it only works in Firefox without a
 ||| polyfill.
-symbols : String -> Maybe VDom
-symbols "exch"   = Just (T "\u{2B0D}")
-symbols "add"    = Just (T "+")
-symbols "sub"    = Just (T "-")
-symbols "mul"    = Just (T "⨉")
-symbols "div"    = Just (T "÷")
-symbols "pow"    = Just (T "x\u{207F}")
-symbols "exp"    = Just (T "\u{1D486}\u{207F}")
-symbols "square" = Just (T "x\u{00B2}")
-symbols "abs"    = Just (T "|\u{1D499}|")
-symbols "sqrt"   = Just (T "\u{221A}")
-symbols "E"      = Just (T "\u{1D486}")
-symbols "PI"     = Just (T "\u{1D70B}")
-symbols "frac"   = Just (T "fraction")
-symbols "fadd"   = Just (T "+")
-symbols "fsub"   = Just (T "-")
-symbols "fmul"   = Just (T "⨉")
-symbols "fdiv"   = Just (T "÷")
-symbols "f2"     = Just (fraction "x"   2)
-symbols "f4"     = Just (fraction "x"   4)
-symbols "f8"     = Just (fraction "x"   8)
-symbols "f16"    = Just (fraction "x"  16)
-symbols "finv"   = Just (fraction 1   "x")
-symbols _        = Nothing
+symbols : Action -> VDom
+symbols (Key (Alpha c))   = T c
+symbols (Key (Dig Zero))  = T '0'
+symbols (Key (Dig One))   = T '1'
+symbols (Key (Dig Two))   = T '2'
+symbols (Key (Dig Three)) = T '3'
+symbols (Key (Dig Four))  = T '4'
+symbols (Key (Dig Five))  = T '5'
+symbols (Key (Dig Six))   = T '6'
+symbols (Key (Dig Seven)) = T '7'
+symbols (Key (Dig Eight)) = T '8'
+symbols (Key (Dig Nine))  = T '9'
+symbols (Key Point)       = T '.'
+symbols (Key Frac)        = fraction "x" "y"
+symbols (Key Clear)       = T "Clear"
+symbols (Apply "swap"  )  = T "\x2B0D"
+symbols (Apply "add"   )  = T "+"
+symbols (Apply "sub"   )  = T "-"
+symbols (Apply "mul"   )  = T "⨉"
+symbols (Apply "div"   )  = T "÷"
+symbols (Apply "pow"   )  = T "x\x207F"
+symbols (Apply "exp"   )  = T "\x1D486\x207F"
+symbols (Apply "square")  = T "x\x00B2"
+symbols (Apply "abs"   )  = T "|\x1D499|"
+symbols (Apply "sqrt"  )  = T "\x221A"
+symbols (Apply "E"     )  = T "\x1D486"
+symbols (Apply "PI"    )  = T "\x1D70B"
+symbols (Apply "frac"  )  = T "fraction"
+symbols (Apply "fadd"  )  = T "+"
+symbols (Apply "fsub"  )  = T "-"
+symbols (Apply "fmul"  )  = T "⨉"
+symbols (Apply "fdiv"  )  = T "÷"
+symbols (Apply "f2"    )  = fraction "x"   2
+symbols (Apply "f4"    )  = fraction "x"   4
+symbols (Apply "f8"    )  = fraction "x"   8
+symbols (Apply "f16"   )  = fraction "x"  16
+symbols (Apply "finv"  )  = fraction 1   "x"
+symbols (Apply x       )  = T x
+symbols Enter             = T "Enter"
+symbols (Show str)        = T str
+symbols Define            = T "="
+symbols Undo              = T "Undo"
+symbols Redo              = T "Redo"
+symbols Reset             = T "Reset"
 
 ||| Render the accumulator's blinky cursor
 |||
@@ -394,23 +430,6 @@ render_accum accum err = div
   values. I could imagine a (::?) operator which handles this.
 -}
 
-
-{-
-  key : Accum -> String -> Key -> JSIO Element
-  key accum label k = do
-    ret <- createElement  !document "button"
-    txt <- createTextNode !document label
-    ignore $ appendChild      ret txt
-    on ret "click" (onclick accum "foo" k)
-    pure ret
-  where
-    onclick : Accum -> String -> Key -> Types.Event -> IO ()
-    onclick accum msg k _ = do
-      consoleLog msg
-      update (enterKey k accum)
-
--}
-
 public export
 tools : VDom
 tools = div
@@ -435,15 +454,73 @@ tape : VDom
 tape = container "tape-container" "Tape" "not implemented"
 
 public export
-keypad : VDom
-keypad = div ("id" ::= "content") ()
+render_layout : Layout -> VDom
+render_layout lyt = div
+  (
+    "id"                  ::= "content",
+    "grid-template-areas" ::- (areas lyt)
+  )
+  (map key (uniqueActions lyt))
+  where
+    ||| Map actions to CSS grid area names
+    area : Action -> String
+    area (Key (Alpha c)) = pack [c]
+    area (Key (Dig Zero)) = "d0"
+    area (Key (Dig One)) = "d1"
+    area (Key (Dig Two)) = "d2"
+    area (Key (Dig Three)) = "d3"
+    area (Key (Dig Four)) = "d4"
+    area (Key (Dig Five)) = "d5"
+    area (Key (Dig Six)) = "d6"
+    area (Key (Dig Seven)) = "d7"
+    area (Key (Dig Eight)) = "d8"
+    area (Key (Dig Nine)) = "d9"
+    area (Key Point) = "dec"
+    area (Key Frac) = "frac"
+    area (Key Clear) = "clear"
+    area (Apply str) = str
+    area Enter = "enter"
+    area (Show str) = "s" ++ str
+    area Define = "def"
+    area Undo = "undo"
+    area Redo = "redo"
+    area Reset = "reset"
+
+    class : Action -> String
+    class (Key x) = "symbol"
+    class _       = "function"
+
+    ||| Construct CSS grid-template-areas property
+    areas : (l : Layout) -> String
+    areas l =
+      let
+        gridAreas = map (map (withDefault area ".")) (actions l)
+      in joinBy " " $ map (show . joinBy " ") gridAreas
+
+    ||| Create the actual button element
+    key : Action -> VDom
+    key action = button
+      (
+        "class"     ::= class action,
+        "click"     ::> action,
+        "grid-area" ::- area action
+      )
+      (symbols action)
+
+
+public export
+keypad : Calc -> VDom
+keypad calc = case getLayout calc.showing of
+  Nothing => h1 () ("Invalid Layout: " ++ calc.showing)
+  Just l  => render_layout l
+
 
 public export
 content : Calc -> VDom
 content calc =
   if calc.showing == "keyboard"
   then tape
-  else keypad
+  else keypad calc
 
 public export
 mode : Calc -> VDom

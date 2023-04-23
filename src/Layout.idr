@@ -38,16 +38,17 @@ data Grid
   -> (cell: Type)
   -> Type
   where
-    MkGrid :  Vect (rows * cols) (Maybe cell) -> Grid rows cols cell
+    MkGrid :  Vect (rows * cols) cell -> Grid rows cols cell
 
 ||| Create an empty 2D Grid
 public export
-blank
+init
   :  {rows : Nat}
   -> {cols : Nat}
   -> {ty   : Type}
+  -> ty
   -> Grid rows cols ty
-blank = MkGrid $ replicate (rows * cols) Nothing
+init value = MkGrid $ replicate (rows * cols) value
 
 ||| Create a 2D grid from a flat vector of the right length
 public export
@@ -55,7 +56,7 @@ grid
   :  {cell : Type}
   -> {rows : Nat}
   -> {cols : Nat}
-  -> Vect (rows * cols) (Maybe cell)
+  -> Vect (rows * cols) cell
   -> Grid rows cols cell
 grid cells = MkGrid cells
 
@@ -65,7 +66,7 @@ rows
   :  {rows : Nat}
   -> {cols : Nat}
   -> Grid rows cols cell
-  -> Vect rows (Vect cols (Maybe cell))
+  -> Vect rows (Vect cols cell)
 rows (MkGrid cells) = kSplits rows cols cells
 
 ||| Project the grid into a flat vector
@@ -74,7 +75,7 @@ cells
   :  {rows : Nat}
   -> {cols : Nat}
   -> Grid rows cols cell
-  -> Vect (rows * cols) (Maybe cell)
+  -> Vect (rows * cols) cell
 cells (MkGrid cs) = cs
 
 ||| Get the de-duplicated list of cells
@@ -88,14 +89,19 @@ uniqueCells
 uniqueCells (MkGrid cells) =
   let cells = toList cells
       dedup = foldl (\acc, a => union acc [a]) [] cells
-  in catMaybes dedup
+  in dedup
+
+public export
+Functor (Grid r c) where
+  map fn (MkGrid c) = MkGrid (map fn c)
+
 
 {- Layout DSL -}
 
 ||| A layout is a named grid of actions of some fixed size.
 public export
 data Layout : Type where
-  MkLayout : String -> (r: Nat) -> (c: Nat) -> (Grid r c Action) -> Layout
+  MkLayout : String -> (r: Nat) -> (c: Nat) -> (Grid r c (Maybe Action)) -> Layout
 
 ||| A short-hand ADT for constructing actions
 |||
@@ -148,21 +154,21 @@ width : Layout -> Nat
 width (MkLayout _ _ c _) = c
 
 export
-actions : (l : Layout) -> Grid (height l) (width l) Action
-actions (MkLayout _ _ _ a) = a
+actions : (l : Layout) -> List (List (Maybe Action))
+actions (MkLayout _ _ _ a) = toList (map toList (rows a))
 
 export
 uniqueActions : (l : Layout) -> List Action
-uniqueActions l = uniqueCells $ actions l
+uniqueActions (MkLayout _ _ _ a) = catMaybes $ uniqueCells $ a
 
 {- Layouts -}
 
 export
 basic : Layout
 basic = layout "basic" 5 4 [
-  F "swap" , F "/"   , F "*"   ,  F "-"   ,
-  D Seven  , D Eight , D Nine  ,  F "+"   ,
-  D Four   , D Five  , D Six   ,  F "+"   ,
+  F "swap" , F "div" , F "mul" ,  F "sub" ,
+  D Seven  , D Eight , D Nine  ,  F "add" ,
+  D Four   , D Five  , D Six   ,  F "add" ,
   D One    , D Two   , D Three ,  A Enter ,
   D Zero   , D Zero  , K Point ,  A Enter
 ]
@@ -173,11 +179,11 @@ scientific = layout "scientific" 12 4 [
   F "sin"  , F "cos"  , F "tan"    , F "hypot" ,
   F "log"  , F "ln"   , C 'x'      , C 'y'     ,
   F "pow"  , F "exp"  , F "square" , F "sqrt"  ,
-  F "swap" , F "/"    , F "*"      , F "-"     ,
-  D Seven  , D Eight  , D Nine     , F "+"     ,
-  D Seven  , D Eight  , D Nine     , F "+"     ,
-  D Four   , D Five   , D Six      , F "+"     ,
-  D Four   , D Five   , D Six      , F "+"     ,
+  F "swap" , F "div"  , F "mul"    , F "sub"   ,
+  D Seven  , D Eight  , D Nine     , F "add"    ,
+  D Seven  , D Eight  , D Nine     , F "add"    ,
+  D Four   , D Five   , D Six      , F "add"    ,
+  D Four   , D Five   , D Six      , F "add"    ,
   D One    , D Two    , D Three    , A Enter   ,
   D One    , D Two    , D Three    , A Enter   ,
   D Zero   , D Zero   , K Point    , A Enter   ,
@@ -188,7 +194,7 @@ export
 fractions : Layout
 fractions = layout "frac" 11 4 [
   F "f2"    , F "f4"     , F "f8"      , F "f16"  ,
-  F "float" , F "finv"   , F "approx"  , F "frac" ,
+  F "toFloat" , F "finv"   , F "approx"  , F "toFrac" ,
   F "swap"  , F "fdiv"   , F "fmul"    , F "fsub" ,
   D Seven   , D Eight    , D Nine      , F "fadd" ,
   D Seven   , D Eight    , D Nine      , F "fadd" ,
@@ -223,3 +229,12 @@ uQwerty = layout "A" 5 10 [
 export
 layouts : List Layout
 layouts = [basic, scientific, fractions, lQwerty, uQwerty]
+
+export
+getLayout : String -> Maybe Layout
+getLayout "basic" = Just basic
+getLayout "scientific" = Just scientific
+getLayout "frac" = Just fractions
+getLayout "a" = Just lQwerty
+getLayout "A" = Just uQwerty
+getLayout _  = Nothing
