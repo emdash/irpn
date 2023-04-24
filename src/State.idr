@@ -123,6 +123,11 @@ pow (R x) (I y) = map R $ Rat.pow x (cast y)
 pow (I x) (R y) = Left "Unimplemented"
 pow _     _     = Left "Unimplemented"
 
+simplify : Value -> Either Error Value
+simplify (I i) = map R $ rat i 1
+simplify (R r) = map R $ simplify r
+simplify _     = Left "Unimplemented"
+
 ||| Placeholder for unimplemented functions
 unimplemented : String -> StackFn
 unimplemented name xs = Left ("Unimplemented: " ++ name)
@@ -146,6 +151,7 @@ builtins = fromList [
   ("f4"      , unaryFn (overX 4)),
   ("f8"      , unaryFn (overX 8)),
   ("f16"     , unaryFn (overX 16)),
+  ("simplify", unaryFn simplify),
   ("approx"  , binaryFn approx),
   ("swap"    , swap),
   ("tanh"    , unaryFn (doubleFn tanh)),
