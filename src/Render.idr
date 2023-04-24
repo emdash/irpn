@@ -249,10 +249,11 @@ span   : Attrs a => Child c => a -> c -> VDom ; span   = E "span"
 h1     : Attrs a => Child c => a -> c -> VDom ; h1     = E "h1"
 button : Attrs a => Child c => a -> c -> VDom ; button = E "button"
 li     : Attrs a => Child c => a -> c -> VDom ; li     = E "li"
-ul     : Attrs a => Child c => a -> c -> VDom ; ul     = E "ul"
-tr     : Attrs a => Child c => a -> c -> VDom ; tr     = E "tr"
-td     : Attrs a => Child c => a -> c -> VDom ; td     = E "td"
 table  : Attrs a => Child c => a -> c -> VDom ; table  = E "table"
+td     : Attrs a => Child c => a -> c -> VDom ; td     = E "td"
+small  : Attrs a => Child c => a -> c -> VDom ; small  = E "small"
+tr     : Attrs a => Child c => a -> c -> VDom ; tr     = E "tr"
+ul     : Attrs a => Child c => a -> c -> VDom ; ul     = E "ul"
 
 {- Quick-and-Dirty DSL for the subset of MathML I use -}
 
@@ -381,7 +382,7 @@ symbols (Apply "f8"    )  = math () $ fraction "x"   8
 symbols (Apply "f16"   )  = math () $ fraction "x"  16
 symbols (Apply "inv"   )  = math () $ fraction 1    "x"
 symbols (Apply "approx")  = T "\x2248"
-symbols (Apply x       )  = T x
+symbols (Apply x       )  = small () x
 symbols Enter             = T "Enter"
 symbols (Show str)        = T str
 symbols Define            = T "="
