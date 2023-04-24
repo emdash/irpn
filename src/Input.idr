@@ -145,14 +145,19 @@ enterPoint _          = Nothing
 ||| - is empty
 ||| - contains only digits
 ||| - contains an incomplete fraction
+|||
+||| Pressing the fraction key multiple times will cycle between d
 enterFrac : Accum -> Maybe Accum
-enterFrac Empty                = Just (Num 0 Nothing)
-enterFrac (Digits  i)          = Just (Num i Nothing)
+enterFrac Empty                = Nothing
+enterFrac (Digits  i)          = Just $ Denom 0 (cast i) Nothing
 enterFrac (Decimal _ _)        = Nothing
-enterFrac (Num     i Nothing)  = Just (Denom i 0        (Just 1))
-enterFrac (Num     i (Just n)) = Just (Denom i (cast n) Nothing)
-enterFrac (Denom    _ _ _)     = Nothing
-enterFrac (Id       _)         = Nothing
+enterFrac (Num 0 (Just n))     = Just $ Denom (cast n) 0        Nothing
+enterFrac (Num i Nothing)      = Just $ Denom 0        i        Nothing
+enterFrac (Num i (Just n))     = Just $ Denom i        (cast n) Nothing
+enterFrac (Denom 0 n (Just d)) = Just $ Denom (cast n) (cast d) Nothing
+enterFrac (Denom i n Nothing)  = Just $ Denom 0        i        (Just (cast n))
+enterFrac (Denom i n _ )       = Nothing
+enterFrac (Id _)               = Nothing
 
 ||| Send a symbol to the accumulator
 |||
