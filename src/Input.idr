@@ -73,7 +73,6 @@ Eq Key where
   (==) Clear     Clear     = True
   (==) _         _         = False
 
-
 ||| Holds and validates user input
 public export
 data Accum : Type where
@@ -150,7 +149,7 @@ enterFrac : Accum -> Maybe Accum
 enterFrac Empty                = Just (Num 0 Nothing)
 enterFrac (Digits  i)          = Just (Num i Nothing)
 enterFrac (Decimal _ _)        = Nothing
-enterFrac (Num     i Nothing)  = Nothing
+enterFrac (Num     i Nothing)  = Just (Denom i 0        (Just 1))
 enterFrac (Num     i (Just n)) = Just (Denom i (cast n) Nothing)
 enterFrac (Denom    _ _ _)     = Nothing
 enterFrac (Id       _)         = Nothing
