@@ -312,11 +312,11 @@ ToMathML Rat where
 
 ||| Now implement for arbitrary stack values
 ToMathML Common.Value where
-  toMathML (I i)   = div () $ math () $ toMathML i
-  toMathML (F dbl) = div () $ math () $ toMathML dbl
-  toMathML (R x)   = div () $ math () $ toMathML x
-  toMathML (S str) = div () $ math () $ toMathML str
-  toMathML (P sx)  = div () $ math () $ mi () "Not Implemented"
+  toMathML (I i)   = div ("class" ::= "integer")  $ math () $ toMathML i
+  toMathML (F dbl) = div ("class" ::= "double")   $ math () $ toMathML dbl
+  toMathML (R x)   = div ("class" ::= "fraction") $ math () $ toMathML x
+  toMathML (S str) = div ()                       $ math () $ toMathML str
+  toMathML (P sx)  = div ()                       $ math () $ mi () "Not Implemented"
 
 {- Other Helper Functions ************************************************** -}
 
