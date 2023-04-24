@@ -71,6 +71,9 @@ overX denom (F dbl) = Left "Invalid Operand"
 overX denom (R x)   = map R $ div x !(rat 1 denom)
 overX denom _       = Left "Invalid Operand"
 
+-- XXX: look for a way to factor out the pattern in the operations
+-- below. this is where it gets fun.
+
 inv : Value -> Either Error Value
 inv (I i) = Left "Unimplemented"
 inv (F x) = Right $ F $ 1 / x
@@ -81,24 +84,32 @@ add : Value -> Value -> Either Error Value
 add (I x) (I y) = Right $ I $ x + y
 add (F x) (F y) = Right $ F $ x + y
 add (R x) (R y) = map R $ add x y
+add (R x) (I y) = map R $ add x !(rat y 1)
+add (I x) (R y) = map R $ add !(rat x 1) y
 add _      _    = Left "Unimplemented"
 
 sub : Value -> Value -> Either Error Value
 sub (I x) (I y) = Right $ I $ x - y
 sub (F x) (F y) = Right $ F $ x - y
 sub (R x) (R y) = map R $ sub x y
+sub (R x) (I y) = map R $ sub x !(rat y 1)
+sub (I x) (R y) = map R $ sub !(rat x 1) y
 sub _      _    = Left "Unimplemented"
 
 mul : Value -> Value -> Either Error Value
 mul (I x) (I y) = Right $ I $ x * y
 mul (F x) (F y) = Right $ F $ x * y
 mul (R x) (R y) = map R $ mul x y
+mul (R x) (I y) = map R $ mul x !(rat y 1)
+mul (I x) (R y) = map R $ mul !(rat x 1) y
 mul _      _    = Left "Unimplemented"
 
 div : Value -> Value -> Either Error Value
 div (I x) (I y) = Right $ I $ x `div` y
 div (F x) (F y) = Right $ F $ x / y
 div (R x) (R y) = map R $ div x y
+div (R x) (I y) = map R $ div x !(rat y 1)
+div (I x) (R y) = map R $ div !(rat x 1) y
 div _      _    = Left "Unimplemented"
 
 ||| Placeholder for unimplemented functions
