@@ -193,16 +193,16 @@ scientific = layout "scientific" 12 4 [
 export
 fractions : Layout
 fractions = layout "frac" 11 4 [
-  F "f2"    , F "f4"     , F "f8"      , F "f16"  ,
-  F "toFloat" , F "inv"   , F "approx"  , F "toFrac" ,
-  F "swap"  , F "div"   , F "mul"    , F "sub" ,
-  D Seven   , D Eight    , D Nine      , F "add" ,
-  D Seven   , D Eight    , D Nine      , F "add" ,
-  D Four    , D Five     , D Six       , F "add" ,
-  D Four    , D Five     , D Six       , F "add" ,
-  D One     , D Two      , D Three     , A Enter  ,
-  D One     , D Two      , D Three     , A Enter  ,
-  D Zero    , D Zero     , K Frac      , A Enter  ,
+  F "f2"    , F "f4"     , F "f8"      , F "f16"      ,
+  F "pow"   , F "inv"    , F "approx"  , F "simplify" ,
+  F "swap"  , F "div"    , F "mul"     , F "sub"      ,
+  D Seven   , D Eight    , D Nine      , F "add"      ,
+  D Seven   , D Eight    , D Nine      , F "add"      ,
+  D Four    , D Five     , D Six       , F "add"      ,
+  D Four    , D Five     , D Six       , F "add"      ,
+  D One     , D Two      , D Three     , A Enter      ,
+  D One     , D Two      , D Three     , A Enter      ,
+  D Zero    , D Zero     , K Frac      , A Enter      ,
   D Zero    , D Zero     , K Frac      , A Enter
 ]
 
