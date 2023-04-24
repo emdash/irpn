@@ -81,11 +81,11 @@ tryOperation fn calc = do
 ||| Try to restore the previous state
 undo : Calc -> Either Error Calc
 undo calc = case calc.history of
-  []      => Left  "History is empty"
-  x :: xs => Right ({
+  []       => Left  "History is empty"
+  x :: xs  => Right ({
     state   := x,
     history := xs,
-    undone  $= (x ::)
+    undone  $= (calc.state ::)
   } calc)
 
 ||| Try to redo an undone action
@@ -94,7 +94,7 @@ redo calc = case calc.undone of
   []      => Left "Redo stack is empty"
   x :: xs => Right ({
     state   := x,
-    history $= (x ::),
+    history $= (calc.state ::),
     undone  := xs
   } calc)
 
