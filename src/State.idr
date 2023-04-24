@@ -112,7 +112,13 @@ mul (I x) (R y) = map R $ mul !(rat x 1) y
 mul _      _    = Left "Unimplemented"
 
 div : Value -> Value -> Either Error Value
-div (I x) (I y) = Right $ I $ x `div` y
+-- special case for integer division: yields an int if possible,
+-- otherwise silently coerces to Rat
+div (I x) (I y) =
+  let rat = rat x (cast y)
+  in case tryInt !rat of
+    Left _   => map R rat
+    Right i  => Right $ I i
 div (F x) (F y) = Right $ F $ x / y
 div (F x) (I y) = Right $ F $ x / (cast y)
 div (I x) (F y) = Right $ F $ (cast x) / y
