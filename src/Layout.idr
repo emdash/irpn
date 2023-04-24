@@ -176,14 +176,14 @@ basic = layout "basic" 5 4 [
 export
 scientific : Layout
 scientific = layout "scientific" 12 4 [
-  F "sin"  , F "cos"  , F "tan"    , F "hypot" ,
+  F "sin"  , F "cos"  , F "tan"    , A Define  ,
   F "log"  , F "ln"   , C 'x'      , C 'y'     ,
   F "pow"  , F "exp"  , F "square" , F "sqrt"  ,
   F "swap" , F "div"  , F "mul"    , F "sub"   ,
-  D Seven  , D Eight  , D Nine     , F "add"    ,
-  D Seven  , D Eight  , D Nine     , F "add"    ,
-  D Four   , D Five   , D Six      , F "add"    ,
-  D Four   , D Five   , D Six      , F "add"    ,
+  D Seven  , D Eight  , D Nine     , F "add"   ,
+  D Seven  , D Eight  , D Nine     , F "add"   ,
+  D Four   , D Five   , D Six      , F "add"   ,
+  D Four   , D Five   , D Six      , F "add"   ,
   D One    , D Two    , D Three    , A Enter   ,
   D One    , D Two    , D Three    , A Enter   ,
   D Zero   , D Zero   , K Point    , A Enter   ,
@@ -213,7 +213,7 @@ lQwerty = layout "a" 5 10 [
   C 'q' , C 'w' , C 'e'   , C 'r'  , C 't'  , C 'y' , C 'u'   , C 'i'   , C 'o'  , C 'p'  ,
   O     , C 'a' , C 's'   , C 'd'  , C 'f'  , C 'g' , C 'h'   , C 'j'   , C 'k'  , C 'l'  ,
   O     , O     , C 'z'   , C 'x'  , C 'c'  , C 'v' , C 'b'   , C 'n'   , C 'm'  , O      ,
-  O     , O     , O       , Def    , Def    , Enter , Enter   , Enter   , Point  , Frac
+  O     , O     , Def     , Def    , Enter  , Enter , Point   , Frac    , O      , O
 ]
 
 export
@@ -223,7 +223,7 @@ uQwerty = layout "A" 5 10 [
   C 'Q' , C 'W' , C 'E'   , C 'R'  , C 'T'  , C 'Y' , C 'U'   , C 'I'   , C 'O'  , C 'P'  ,
   O     , C 'A' , C 'S'   , C 'D'  , C 'F'  , C 'G' , C 'H'   , C 'J'   , C 'K'  , C 'L'  ,
   O     , O     , C 'Z'   , C 'X'  , C 'C'  , C 'V' , C 'B'   , C 'N'   , C 'M'  , O      ,
-  O     , O     , O       , Def    , Def    , Enter , Enter   , Enter   , Point  , Frac
+  O     , O     , Def     , Def    , Enter  , Enter , Point   , Frac    , O      , O
 ]
 
 export

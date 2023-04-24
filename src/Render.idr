@@ -310,11 +310,11 @@ ToMathML Rat where
 
 ||| Now implement for arbitrary stack values
 ToMathML Common.Value where
-  toMathML (I i)   = toMathML i
-  toMathML (F dbl) = toMathML dbl
-  toMathML (R x)   = toMathML x
-  toMathML (S str) = toMathML str
-  toMathML (P sx)  = mi () "Not Implemented"
+  toMathML (I i)   = div () $ math () $ toMathML i
+  toMathML (F dbl) = div () $ math () $ toMathML dbl
+  toMathML (R x)   = div () $ math () $ toMathML x
+  toMathML (S str) = div () $ math () $ toMathML str
+  toMathML (P sx)  = div () $ math () $ mi () "Not Implemented"
 
 {- Other Helper Functions ************************************************** -}
 
@@ -353,7 +353,7 @@ symbols (Key (Dig Seven)) = T '7'
 symbols (Key (Dig Eight)) = T '8'
 symbols (Key (Dig Nine))  = T '9'
 symbols (Key Point)       = T '.'
-symbols (Key Frac)        = fraction "x" "y"
+symbols (Key Frac)        = math () $ fraction "x" "y"
 symbols (Key Clear)       = T "Clear"
 symbols (Apply "swap"  )  = T "\x2B0D"
 symbols (Apply "add"   )  = T "+"
@@ -372,11 +372,11 @@ symbols (Apply "fadd"  )  = T "+"
 symbols (Apply "fsub"  )  = T "-"
 symbols (Apply "fmul"  )  = T "⨉"
 symbols (Apply "fdiv"  )  = T "÷"
-symbols (Apply "f2"    )  = fraction "x"   2
-symbols (Apply "f4"    )  = fraction "x"   4
-symbols (Apply "f8"    )  = fraction "x"   8
-symbols (Apply "f16"   )  = fraction "x"  16
-symbols (Apply "finv"  )  = fraction 1   "x"
+symbols (Apply "f2"    )  = math () $ fraction "x"   2
+symbols (Apply "f4"    )  = math () $ fraction "x"   4
+symbols (Apply "f8"    )  = math () $ fraction "x"   8
+symbols (Apply "f16"   )  = math () $ fraction "x"  16
+symbols (Apply "finv"  )  = math () $ fraction 1   "x"
 symbols (Apply x       )  = T x
 symbols Enter             = T "Enter"
 symbols (Show str)        = T str
@@ -391,7 +391,7 @@ symbols Reset             = T "Reset"
 ||| where the last character has been wrapped in an element with the
 ||| carret ID, so that special CSS rules can match on it.
 carret : ToString a => Maybe a -> VDom
-carret Nothing  = span ("id" ::= "carret") ()
+carret Nothing  = mn () $ span ("id" ::= "carret") ()
 carret (Just v) =
   let
     s     = toString v
@@ -399,14 +399,16 @@ carret (Just v) =
     end   = len - 1
     head  = strSubstr 0 end s
     last  = strSubstr end len s
-  in mn () (head, span ("id" ::= "carret") (), last)
+  in mn () (head, span ("id" ::= "carret") last)
 
 ||| Render the accumulator contents
 contents : Accum -> VDom
 contents Empty         = carret (the (Maybe Nat) Nothing)
 contents (Digits i)    = carret (Just i)
 contents (Decimal i j) = carret (Just (toString i ++ "." ++ toString j))
+contents (Num 0 j)     = math () (fraction (carret j) "?")
 contents (Num i j)     = math () (mixed i (carret j) "?")
+contents (Denom 0 j k) = math () (fraction j (carret k))
 contents (Denom i j k) = math () (mixed i j (carret k))
 contents (Id var)      = carret (Just var)
 
