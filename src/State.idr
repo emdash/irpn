@@ -32,9 +32,57 @@ import Input
 StackFn : Type
 StackFn = List Value -> Either Error (List Value)
 
+||| Exchange the top two stack values
+swap : StackFn
+swap (x :: y :: xs) = Right $ y :: x :: xs
+swap _              = Left "Stack underflow"
+
 ||| A stack function which always pushes a constant value
 constFn : Value -> StackFn
 constFn x xs = Right (x :: xs)
+
+||| A stack function which wraps a unary function
+unaryFn : (Value -> Either Error Value) -> StackFn
+unaryFn f (x :: xs) = map (:: xs) (f x)
+unaryFn _ _         = Left "Stack underflow"
+
+||| Wraps builtin functions on Double.
+|||
+||| We support integer operations by casting through Double.
+doubleFn : (Double -> Double) -> Value -> Either Error Value
+doubleFn f (I i)   = Right $ I $ cast $ f $ cast i
+doubleFn f (F dbl) = Right $ F $ f dbl
+doubleFn f _       = Left "Invalid Operand"
+
+||| A stack function which wraps a binary operation
+binaryFn : (Value -> Value -> Either Error Value) -> StackFn
+binaryFn f (y :: x :: xs) = map (:: xs) (f x y)
+binaryFn _ _              = Left "Stack underflow"
+
+add : Value -> Value -> Either Error Value
+add (I x) (I y) = Right $ I $ x + y
+add (F x) (F y) = Right $ F $ x + y
+add (R x) (R y) = Left "Unimplemented"
+add _      _    = Left "Unimplemented"
+
+sub : Value -> Value -> Either Error Value
+sub (I x) (I y) = Right $ I $ x - y
+sub (F x) (F y) = Right $ F $ x - y
+sub (R x) (R y) = Left "Unimplemented"
+sub _      _    = Left "Unimplemented"
+
+mul : Value -> Value -> Either Error Value
+mul (I x) (I y) = Right $ I $ x * y
+mul (F x) (F y) = Right $ F $ x * y
+mul (R x) (R y) = Left "Unimplemented"
+mul _      _    = Left "Unimplemented"
+
+div : Value -> Value -> Either Error Value
+div (I x) (I y) = Right $ I $ x `div` y
+div (F x) (F y) = Right $ F $ x / y
+div (R x) (R y) = Left "Unimplemented"
+div _      _    = Left "Unimplemented"
+
 
 ||| Placeholder for unimplemented functions
 unimplemented : String -> StackFn
@@ -47,12 +95,27 @@ Env = HashMap String StackFn
 ||| Table of builtin functions
 builtins : Env
 builtins = fromList [
-  ("pi" , constFn (F 3.14159)),
-  ("e"  , constFn (F 2.7178)),
-  ("+"  , unimplemented "+"),
-  ("-"  , unimplemented "-"),
-  ("*"  , unimplemented "*"),
-  ("/"  , unimplemented "/")
+  ("pi"      , constFn  (F 3.14159)),
+  ("e"       , constFn  (F 2.7178)),
+  ("add"     , binaryFn add),
+  ("sub"     , binaryFn sub),
+  ("mul"     , binaryFn mul),
+  ("div"     , binaryFn div),
+  ("swap"    , swap),
+  ("tanh"    , unaryFn (doubleFn tanh)),
+  ("tan"     , unaryFn (doubleFn tan)),
+  ("sqrt"    , unaryFn (doubleFn sqrt)),
+  ("sinh"    , unaryFn (doubleFn sinh)),
+  ("sin"     , unaryFn (doubleFn sin)),
+  ("log"     , unaryFn (doubleFn log)),
+  ("floor"   , unaryFn (doubleFn floor)),
+  ("exp"     , unaryFn (doubleFn exp)),
+  ("cosh"    , unaryFn (doubleFn cosh)),
+  ("cos"     , unaryFn (doubleFn cos)),
+  ("ceil"    , unaryFn (doubleFn ceiling)),
+  ("atan"    , unaryFn (doubleFn atan)),
+  ("asin"    , unaryFn (doubleFn asin)),
+  ("acos"    , unaryFn (doubleFn acos))
 ]
 
 ||| Wrapper around hashtable lookup which translates errors
@@ -123,7 +186,9 @@ pop state = case state.stack of
 public export
 apply : String -> State -> Either Error State
 apply name state = do
-  state <- enter state
+  state <- if isEmpty state.accum
+           then (Right state)
+           else (enter state)
   func  <- lookup name state.env
   stack <- func state.stack
   pure ({

@@ -181,6 +181,11 @@ value (Denom i n Nothing)  = Left "Incomplete fraction."
 value (Denom i n (Just d)) = Right  (R (MkRat ((i * (cast d)) + n) d))
 value (Id id)              = Right (S (pack (asList id)))
 
+public export
+isEmpty : Accum -> Bool
+isEmpty Empty = True
+isEmpty _     = False
+
 
 public export
 test : SnocList Key -> Maybe Accum

@@ -42,7 +42,9 @@ import Render
 ||| every state change.
 render : Calc -> Maybe Error -> JSIO ()
 render calc err = do
-  Just root <- getElementById !document "state" | Nothing => consoleLog "fuck!"
+  Just root <- getElementById !document "state"
+             | Nothing => consoleLog "missing root"
+  consoleLog (show err)
   contents  <- vrender (doAction calc) (render_calc calc err)
   ignore $ replaceWith root [inject $ contents :> Node]
   where
