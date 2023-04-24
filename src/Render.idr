@@ -27,11 +27,12 @@ import JS
 import Web.Dom
 import Web.Raw.Css
 
+import Calc
 import Common
 import Input
-import Calc
-import State
 import Layout
+import Rat
+import State
 
 %default total
 
@@ -300,13 +301,14 @@ ToMathML Nat     where toMathML n = mn () n
 
 ||| Renders a Rat as a mixed number or proper fraction.
 ToMathML Rat where
-  toMathML (MkRat num denom) =
-    if (abs num) < (cast denom)
-    then fraction num denom
-    else let
-      whole := (num `div` (cast denom))
-      num   := (num `mod` (cast denom))
-    in mixed whole num denom
+  toMathML r =
+    let (num, denom) = unpack r
+    in if (abs num) < (cast denom)
+      then fraction num denom
+      else let
+        whole := (num `div` (cast denom))
+        num   := (num `mod` (cast denom))
+      in mixed whole num denom
 
 ||| Now implement for arbitrary stack values
 ToMathML Common.Value where
@@ -376,7 +378,7 @@ symbols (Apply "f2"    )  = math () $ fraction "x"   2
 symbols (Apply "f4"    )  = math () $ fraction "x"   4
 symbols (Apply "f8"    )  = math () $ fraction "x"   8
 symbols (Apply "f16"   )  = math () $ fraction "x"  16
-symbols (Apply "finv"  )  = math () $ fraction 1   "x"
+symbols (Apply "inv"   )  = math () $ fraction 1    "x"
 symbols (Apply "approx")  = T "\x2248"
 symbols (Apply x       )  = T x
 symbols Enter             = T "Enter"
