@@ -377,6 +377,7 @@ symbols (Apply "f4"    )  = math () $ fraction "x"   4
 symbols (Apply "f8"    )  = math () $ fraction "x"   8
 symbols (Apply "f16"   )  = math () $ fraction "x"  16
 symbols (Apply "finv"  )  = math () $ fraction 1   "x"
+symbols (Apply "approx")  = T "\x2248"
 symbols (Apply x       )  = T x
 symbols Enter             = T "Enter"
 symbols (Show str)        = T str
