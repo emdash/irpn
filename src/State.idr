@@ -21,6 +21,7 @@
 module State
 
 import Data.HashMap
+import Data.Nat.Exponentiation
 import Common
 import Input
 import Rat
@@ -112,6 +113,16 @@ div (R x) (I y) = map R $ div x !(rat y 1)
 div (I x) (R y) = map R $ div !(rat x 1) y
 div _      _    = Left "Unimplemented"
 
+pow : Value -> Value -> Either Error Value
+pow (I x) (I y) = Right $ I $ cast $ Exponentiation.pow (cast x) (cast y)
+pow (F x) (F y) = Right $ F $ Prelude.pow x y
+pow (F x) (I y) = Right $ F $ Prelude.pow x (cast y)
+pow (I x) (F y) = Right $ F $ Prelude.pow (cast x) y
+pow (R x) (R y) = map R $ Rat.pow x !(tryInt y)
+pow (R x) (I y) = map R $ Rat.pow x (cast y)
+pow (I x) (R y) = Left "Unimplemented"
+pow _     _     = Left "Unimplemented"
+
 ||| Placeholder for unimplemented functions
 unimplemented : String -> StackFn
 unimplemented name xs = Left ("Unimplemented: " ++ name)
@@ -129,6 +140,7 @@ builtins = fromList [
   ("sub"     , binaryFn sub),
   ("mul"     , binaryFn mul),
   ("div"     , binaryFn div),
+  ("pow"     , binaryFn pow),
   ("inv"     , unaryFn inv),
   ("f2"      , unaryFn (overX 2)),
   ("f4"      , unaryFn (overX 4)),

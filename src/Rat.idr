@@ -74,5 +74,21 @@ div : Rat -> Rat -> Either String Rat
 div a b = mul a !(inv b)
 
 public export
+pow : Rat -> Integer -> Either String Rat
+pow r exp =
+  if (exp < 0)
+    then pow_int !(inv r) (cast exp)
+    else pow_int r        (cast exp)
+  where
+    pow_int : Rat -> Nat -> Either String Rat
+    pow_int x 0     = rat 1 1
+    pow_int x (S k) = mul x !(pow_int x k)
+
+public export
 approx : Rat -> Nat -> Either String Rat
 approx rat denom = Left "Unimplemented"
+
+public export
+tryInt : Rat -> Either String Integer
+tryInt (MkRat num 1) = Right num
+tryInt _             = Left "Not Integral"
