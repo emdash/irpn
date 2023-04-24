@@ -76,7 +76,7 @@ overX denom _       = Left "Invalid Operand"
 -- below. this is where it gets fun.
 
 inv : Value -> Either Error Value
-inv (I i) = Left "Unimplemented"
+inv (I i) = map R $ rat 1 (cast i)
 inv (F x) = Right $ F $ 1 / x
 inv (R x) = map R $ inv x
 inv _ = Left "Unimplemented"
