@@ -84,6 +84,8 @@ inv _ = Left "Unimplemented"
 add : Value -> Value -> Either Error Value
 add (I x) (I y) = Right $ I $ x + y
 add (F x) (F y) = Right $ F $ x + y
+add (F x) (I y) = Right $ F $ x + (cast y)
+add (I x) (F y) = Right $ F $ (cast x) + y
 add (R x) (R y) = map R $ add x y
 add (R x) (I y) = map R $ add x !(rat y 1)
 add (I x) (R y) = map R $ add !(rat x 1) y
@@ -92,6 +94,8 @@ add _      _    = Left "Unimplemented"
 sub : Value -> Value -> Either Error Value
 sub (I x) (I y) = Right $ I $ x - y
 sub (F x) (F y) = Right $ F $ x - y
+sub (F x) (I y) = Right $ F $ x - (cast y)
+sub (I x) (F y) = Right $ F $ (cast x) - y
 sub (R x) (R y) = map R $ sub x y
 sub (R x) (I y) = map R $ sub x !(rat y 1)
 sub (I x) (R y) = map R $ sub !(rat x 1) y
@@ -100,6 +104,8 @@ sub _      _    = Left "Unimplemented"
 mul : Value -> Value -> Either Error Value
 mul (I x) (I y) = Right $ I $ x * y
 mul (F x) (F y) = Right $ F $ x * y
+mul (F x) (I y) = Right $ F $ x * (cast y)
+mul (I x) (F y) = Right $ F $ (cast x) * y
 mul (R x) (R y) = map R $ mul x y
 mul (R x) (I y) = map R $ mul x !(rat y 1)
 mul (I x) (R y) = map R $ mul !(rat x 1) y
@@ -108,6 +114,8 @@ mul _      _    = Left "Unimplemented"
 div : Value -> Value -> Either Error Value
 div (I x) (I y) = Right $ I $ x `div` y
 div (F x) (F y) = Right $ F $ x / y
+div (F x) (I y) = Right $ F $ x / (cast y)
+div (I x) (F y) = Right $ F $ (cast x) / y
 div (R x) (R y) = map R $ div x y
 div (R x) (I y) = map R $ div x !(rat y 1)
 div (I x) (R y) = map R $ div !(rat x 1) y
