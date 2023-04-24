@@ -63,7 +63,6 @@ ToString Double          where
 I tried adding:
 
   Show a => ToString a     where
-
 But this causes type checking to fail. It appears idris can't decide
 which method to call, which is disappointing. In C++ there's a notion
 that the most specific template instance "wins", while Rust does
@@ -308,7 +307,9 @@ ToMathML Rat where
       else let
         whole := (num `div` (cast denom))
         num   := (num `mod` (cast denom))
-      in mixed whole num denom
+      in if num == 0
+        then toMathML whole
+        else mixed whole num denom
 
 ||| Now implement for arbitrary stack values
 ToMathML Common.Value where
