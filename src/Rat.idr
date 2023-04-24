@@ -24,6 +24,7 @@ module Rat
 import Data.Nat
 import Data.Nat.Factor
 
+
 %default total
 
 ||| A number represented as the signed ratio of two integers.
@@ -42,6 +43,21 @@ record Rat where
 
   -- we need this to apply gcd in `simplify`
   zeroSafe : NotBothZero (cast num) denom
+
+
+||| Cast a nat to an integer, using the original sign
+public export
+keepSign : Integer -> Nat -> Integer
+keepSign sign value =
+  let ret = cast value
+  in if (sign < 0)
+    then negate ret
+    else ret
+
+||| Divide an integer by a nat, preserving original sign
+public export
+signedDiv : Integer -> Nat -> Integer
+signedDiv x y = keepSign x ((cast (abs x)) `div` y)
 
 ||| Rational numbers are represented as `num / denom`
 export
@@ -76,13 +92,7 @@ sub a b = rat
 ||| Compute the multiplicative inverse of the given rational number
 public export
 inv : Rat -> Either String Rat
-inv (MkRat num denom _) = rat (preserveSign num denom) (cast num)
-  where
-    preserveSign : Integer -> Nat -> Integer
-    preserveSign num denom =
-      if (num < 0)
-      then negate (cast denom)
-      else cast denom
+inv (MkRat num denom _) = rat (keepSign num denom) (cast num)
 
 ||| Multiply two rational numbers
 public export
@@ -113,15 +123,22 @@ public export
 approx : Rat -> Nat -> Either String Rat
 approx rat denom = Left "Unimplemented"
 
+public export
+abs : Rat -> Either String Rat
+abs (MkRat num denom zeroSafe) = rat (abs num) denom
+
 ||| Express the given rational in lowest terms
 public export
 simplify : Rat -> Either String Rat
-simplify (MkRat num denom _) =
-  let
-    (MkDPair g _) = gcd (cast num) denom
-    n = num   `div` (cast g)
-    d = denom `div` g
-  in rat n d
+simplify r = simplify_int !(abs r)
+  where
+    simplify_int : Rat -> Either String Rat
+    simplify_int (MkRat num denom _) =
+      let
+        (MkDPair g _) = gcd (cast num) denom
+        n = (r.num) `signedDiv` (cast g)
+        d = denom `div` g
+      in rat (cast n) d
 
 ||| Try to coerce a rational to an integer
 |||

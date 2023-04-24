@@ -306,7 +306,7 @@ ToMathML Rat where
     in if (abs num) < (cast denom)
       then fraction num denom
       else let
-        whole := (num `div` (cast denom))
+        whole := num `signedDiv` denom
         num   := (num `mod` (cast denom))
       in if num == 0
         then toMathML whole
