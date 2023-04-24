@@ -131,6 +131,9 @@ pow (R x) (I y) = map R $ Rat.pow x (cast y)
 pow (I x) (R y) = Left "Unimplemented"
 pow _     _     = Left "Unimplemented"
 
+square : Value -> Either Error Value
+square x = pow x (I 2)
+
 simplify : Value -> Either Error Value
 simplify (I i) = map R $ rat i 1
 simplify (R r) = map R $ simplify r
@@ -175,7 +178,8 @@ builtins = fromList [
   ("ceil"    , unaryFn (doubleFn ceiling)),
   ("atan"    , unaryFn (doubleFn atan)),
   ("asin"    , unaryFn (doubleFn asin)),
-  ("acos"    , unaryFn (doubleFn acos))
+  ("acos"    , unaryFn (doubleFn acos)),
+  ("square"  , unaryFn square)
 ]
 
 ||| Wrapper around hashtable lookup which translates errors
