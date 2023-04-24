@@ -20,16 +20,14 @@
 ||| Common definitions that don't beling to any other module
 module Common
 
+import Rat
+
 %default total
 
 ||| The type of all user-visible error messages
 public export
 Error : Type
 Error = String
-
-||| Type of fractions
-public export
-data Rat = MkRat Integer Nat
 
 ||| Translate a maybe value to an Either
 |||

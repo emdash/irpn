@@ -23,6 +23,7 @@ module State
 import Data.HashMap
 import Common
 import Input
+import Rat
 
 %default total
 
@@ -59,30 +60,46 @@ binaryFn : (Value -> Value -> Either Error Value) -> StackFn
 binaryFn f (y :: x :: xs) = map (:: xs) (f x y)
 binaryFn _ _              = Left "Stack underflow"
 
+approx : Value -> Value -> Either Error Value
+approx (R x) (I d) = map R $ Rat.approx x (cast d)
+approx _     _     = Left "Invalid Operand"
+
+||| Create frations with arbitrary denominators
+overX : Nat -> Value -> Either Error Value
+overX denom (I i)   = map R $ rat i denom
+overX denom (F dbl) = Left "Invalid Operand"
+overX denom (R x)   = map R $ div x !(rat 1 denom)
+overX denom _       = Left "Invalid Operand"
+
+inv : Value -> Either Error Value
+inv (I i) = Left "Unimplemented"
+inv (F x) = Right $ F $ 1 / x
+inv (R x) = map R $ inv x
+inv _ = Left "Unimplemented"
+
 add : Value -> Value -> Either Error Value
 add (I x) (I y) = Right $ I $ x + y
 add (F x) (F y) = Right $ F $ x + y
-add (R x) (R y) = Left "Unimplemented"
+add (R x) (R y) = map R $ add x y
 add _      _    = Left "Unimplemented"
 
 sub : Value -> Value -> Either Error Value
 sub (I x) (I y) = Right $ I $ x - y
 sub (F x) (F y) = Right $ F $ x - y
-sub (R x) (R y) = Left "Unimplemented"
+sub (R x) (R y) = map R $ sub x y
 sub _      _    = Left "Unimplemented"
 
 mul : Value -> Value -> Either Error Value
 mul (I x) (I y) = Right $ I $ x * y
 mul (F x) (F y) = Right $ F $ x * y
-mul (R x) (R y) = Left "Unimplemented"
+mul (R x) (R y) = map R $ mul x y
 mul _      _    = Left "Unimplemented"
 
 div : Value -> Value -> Either Error Value
 div (I x) (I y) = Right $ I $ x `div` y
 div (F x) (F y) = Right $ F $ x / y
-div (R x) (R y) = Left "Unimplemented"
+div (R x) (R y) = map R $ div x y
 div _      _    = Left "Unimplemented"
-
 
 ||| Placeholder for unimplemented functions
 unimplemented : String -> StackFn
@@ -101,6 +118,12 @@ builtins = fromList [
   ("sub"     , binaryFn sub),
   ("mul"     , binaryFn mul),
   ("div"     , binaryFn div),
+  ("inv"     , unaryFn inv),
+  ("f2"      , unaryFn (overX 2)),
+  ("f4"      , unaryFn (overX 4)),
+  ("f8"      , unaryFn (overX 8)),
+  ("f16"     , unaryFn (overX 16)),
+  ("approx"  , binaryFn approx),
   ("swap"    , swap),
   ("tanh"    , unaryFn (doubleFn tanh)),
   ("tan"     , unaryFn (doubleFn tan)),

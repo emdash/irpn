@@ -23,6 +23,7 @@ module Input
 import Data.Nat
 import Data.String
 import Common
+import Rat
 
 %default total
 
@@ -178,7 +179,7 @@ value (Decimal i j)        = case parseDouble ((show i) ++ "." ++ (show j)) of
   Just f                   => Right (F f)
 value (Num i n)            = Left "Incomplete fraction."
 value (Denom i n Nothing)  = Left "Incomplete fraction."
-value (Denom i n (Just d)) = Right  (R (MkRat ((i * (cast d)) + n) d))
+value (Denom i n (Just d)) = map R $ rat ((i * (cast d)) + n) d
 value (Id id)              = Right (S (pack (asList id)))
 
 public export
