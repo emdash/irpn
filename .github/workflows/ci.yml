@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+  workflow_call:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Build using Docker
+      run: make irpn
+    - name: Debug
+      run: ls -al
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: pages-site
+        path: |
+          index.html
+          build/exec/irpn.js
