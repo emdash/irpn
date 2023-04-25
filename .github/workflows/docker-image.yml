@@ -38,11 +38,11 @@ jobs:
       run: mkdir -p staging/ && cp index.html staging && mv build staging
     - name: Setup Pages
       id: pages
-      uses: actions/configure-pages@1
+      uses: actions/configure-pages@v1
     - name: OMG WTF
       run: ls -al
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v3
+      uses: actions/upload-pages-artifact@v1
       with:
         path: staging
 
