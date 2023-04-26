@@ -23,22 +23,21 @@ concurrency:
 jobs:
   # can't figure out how to avoid re-running CI again.
   # oh well.
-  build:
-    uses: ./.github/workflows/ci.yml
   deploy:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Download build artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: pages-site
-          path: pages-site
-      - name: Unpack archive
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Build using Docker
+        run: make irpn
+      - name: Staging
+        run: mkdir staging && cp index.html staging && mv build staging
+      - name: Debug
         run: ls -al
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v2
         with:
-          path: pages-site
+          path: staging
