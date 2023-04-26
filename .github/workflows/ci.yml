@@ -12,13 +12,17 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: ghcr.io/emdash/irpn-base:latest
     steps:
     - name: Checkout
       uses: actions/checkout@v3
-    - name: Compile Idris Source to JS
-      run: pack build irpn.ipkg
+    - name: Build the Docker image
+      run: docker build . --tag irpn
+    - name: Create docker container from image
+      run: docker create irpn > img_id
+    - name: Copy build artifact out of the container
+      run: docker cp "$(cat img_id):build/" .
+    - name: OMG WTF
+      run: ls -al
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
