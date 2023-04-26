@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: CI
 
 on:
   workflow_call:
@@ -7,9 +7,6 @@ on:
 jobs:
   build:
     runs-on: ghcr.io/stefan-hoeck/idris2-pack:latest
-    types: [completed]
-    branches: ["main"]
-
     steps:
     - name: Checkout
       uses: actions/checkout@v3
