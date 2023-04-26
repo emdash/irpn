@@ -1,3 +1,29 @@
+name: CI
 
 on:
+  workflow_call:
   workflow_dispatch:
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Build using Docker
+      run: make irpn
+    - name: Debug
+      run: ls -al
+    - name: Upload artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: pages-site
+        path: |
+          index.html
+          build/exec/irpn.js

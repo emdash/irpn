@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Old CI
 
 on:
   workflow_dispatch:
@@ -27,7 +27,7 @@ jobs:
     - name: Create docker container from image
       run: docker create irpn > img_id
     - name: Copy build artifact out of the container
-      run: docker cp "$(cat img_id):irpn/build/"
+      run: docker cp "$(cat img_id):build/" .
     - name: OMG WTF
       run: ls -al
     - name: Upload artifact
