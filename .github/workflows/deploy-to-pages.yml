@@ -9,12 +9,6 @@ on:
 
 # XXX: added this comment to allow me to save what was already here.
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 # Allow only one concurrent deployment, skipping runs queued between
 # the run in-progress and latest queued.
 concurrency:
@@ -23,10 +17,7 @@ concurrency:
 jobs:
   # can't figure out how to avoid re-running CI again.
   # oh well.
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,7 +28,21 @@ jobs:
         run: mkdir staging && cp index.html staging && mv build staging
       - name: Debug
         run: ls -al
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v1
         with:
           path: staging
+
+  deploy:
+    needs: build
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        uses: actions/deploy-pages@v2
