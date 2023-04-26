@@ -5,6 +5,7 @@ on:
     workflows: ["CI"]
     types: [completed]
     branches: ["main"]
+  workflow_dispatch:
 
 # XXX: added this comment to allow me to save what was already here.
 
@@ -20,6 +21,10 @@ concurrency:
   group: "pages"
 
 jobs:
+  # can't figure out how to avoid re-running CI again.
+  # oh well.
+  build:
+    uses: ./.github/workflows/ci.yml
   deploy:
     environment:
       name: github-pages
@@ -27,7 +32,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Download build artifact
-        id: deployment
         uses: actions/download-artifact@v3
         with:
           name: pages-site
