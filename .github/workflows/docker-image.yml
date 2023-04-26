@@ -1,4 +1,4 @@
-name: CI
+name: Old CI
 
 on:
   workflow_dispatch:

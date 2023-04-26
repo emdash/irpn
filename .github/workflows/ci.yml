@@ -1,9 +1,7 @@
-name: Docker Image CI
+name: CI
 
 on:
   workflow_dispatch:
-
-# XXX: added this comment to allow me to save what was already here.
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -11,18 +9,9 @@ permissions:
   pages: write
   id-token: write
 
-# Allow only one concurrent deployment, skipping runs queued between
-# the run in-progress and latest queued.
-concurrency:
-  group: "pages"
-
-
 jobs:
   build:
     runs-on: ghcr.io/stefan-hoeck/idris2-pack:latest
-    types: [completed]
-    branches: ["main"]
-
     steps:
     - name: Checkout
       uses: actions/checkout@v3
