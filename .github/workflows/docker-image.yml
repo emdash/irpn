@@ -19,8 +19,12 @@ concurrency:
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    runs-on: ghcr.io/stefan-hoeck/idris2-pack:latest
+    types: [completed]
+    branches: ["main"]
+
     steps:
+<<<<<<< HEAD
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: docker build . --file Dockerfile --tag irpn
@@ -30,6 +34,12 @@ jobs:
       run: docker cp "$(cat img_id):build/" .
     - name: OMG WTF
       run: ls -al
+=======
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Compile Idris Source to JS
+      run: pack build irpn.ipkg
+>>>>>>> d13cf08 (Create a CI workflow which runs directly on the stephan's container)
     - name: Upload artifact
       uses: actions/upload-artifact@v3
       with:
