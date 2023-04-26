@@ -34,25 +34,15 @@ jobs:
       run: docker create irpn > img_id
     - name: Copy build artifact out of the container
       run: docker cp "$(cat img_id):/opt/irpn/build/" .
-    - name: Stage files
-      run: mkdir -p staging/ && cp index.html staging && mv build staging
     - name: Setup Pages
       id: pages
       uses: actions/configure-pages@v1
     - name: OMG WTF
       run: ls -al
     - name: Upload artifact
-      uses: actions/upload-pages-artifact@v1
+      uses: actions/upload-artifact@v3
       with:
-        path: staging
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v2
+        name: pages-site
+        path: |
+          index.html
+          build/exec/irpn.js
