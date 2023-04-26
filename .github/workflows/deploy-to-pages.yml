@@ -1,7 +1,10 @@
 name: Deploy to pages
 
 on:
-  workflow_dispatch
+  workflow_run:
+    workflows: ["Docker Image CI"]
+    types: [completed]
+    branches: ["main"]
 
 # XXX: added this comment to allow me to save what was already here.
 
@@ -29,6 +32,7 @@ jobs:
         uses: actions/download-artifact@v3
         with:
           name: pages-site
+          path: pages-site
       - name: Unpack archive
         run: ls -al
       - name: Deploy to GitHub Pages
