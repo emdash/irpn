@@ -1,10 +1,7 @@
 name: Docker Image CI
 
 on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 # XXX: added this comment to allow me to save what was already here.
 
@@ -21,11 +18,8 @@ concurrency:
 
 
 jobs:
-
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v3
     - name: Build the Docker image
@@ -33,10 +27,7 @@ jobs:
     - name: Create docker container from image
       run: docker create irpn > img_id
     - name: Copy build artifact out of the container
-      run: docker cp "$(cat img_id):/opt/irpn/build/" .
-    - name: Setup Pages
-      id: pages
-      uses: actions/configure-pages@v1
+      run: docker cp "$(cat img_id):irpn/build/"
     - name: OMG WTF
       run: ls -al
     - name: Upload artifact
