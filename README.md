@@ -10,7 +10,7 @@
 - Single-page
 - Mobile-first, responsive layout.
 
-You can try it [here](https://emdash.github.io/irpn) (note: live demo not available)
+You can try it [here!](https://emdash.github.io/irpn)
 
 ## Overview
 
