@@ -1,3 +1,37 @@
+
+Skip to content
+Pull requests
+Issues
+Codespaces
+Marketplace
+Explore
+@emdash
+emdash /
+irpn
+Public
+
+Fork your own copy of emdash/irpn
+
+Code
+Issues
+Pull requests
+Actions
+Projects
+Wiki
+Security
+Insights
+
+    Settings
+
+Deploy to pages
+Deploy to pages #12
+
+Jobs
+
+Run details
+
+Workflow file for this run
+.github/workflows/deploy-to-pages.yml at 6cd5e7d
 name: Deploy to pages
 
 on:
@@ -9,12 +43,6 @@ on:
 
 # XXX: added this comment to allow me to save what was already here.
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
 # Allow only one concurrent deployment, skipping runs queued between
 # the run in-progress and latest queued.
 concurrency:
@@ -23,10 +51,7 @@ concurrency:
 jobs:
   # can't figure out how to avoid re-running CI again.
   # oh well.
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -37,7 +62,22 @@ jobs:
         run: mkdir staging && cp index.html staging && mv build staging
       - name: Debug
         run: ls -al
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v2
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v1
         with:
           path: staging
+
+  deploy:
+    needs: build
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy
+        uses: actions/deploy-pages@v2
+Getting tired of this · emdash/irpn@6cd5e7d
