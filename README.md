@@ -3,7 +3,8 @@
 ![screenshot!](screenshot.png)
 
 - [x] Single-page app
-- [x] Uses reverse-polish notation ([RPN](https://en.wikipedia.org/wiki/Reverse_Polish_notation))
+- [x] Uses reverse-polish notation
+	  ([RPN](https://en.wikipedia.org/wiki/Reverse_Polish_notation))
 - [x] visible stack
 - [ ] visible variable environment
 - [x] Unlimited undo and redo
@@ -19,30 +20,21 @@ You can try it [here!](https://emdash.github.io/irpn)
 This is an idris port of my original pure JavaScript calculator,
 available [here](https://github.com/emdash/rpncalc)
 
-I'd been itching to re-write *rpncalc* in a langauge with strong
-types. I hope that using Idris will allow me to add advanced features.
+I started *rpncalc* two years ago, as an exercise in minimalist
+web-programming. As I've come to depend on it, I'd been itching to
+re-write *rpncalc* in a langauge with strong types.
 
 The original RPN calculator will remain available, but suffers from a
-lack of attention on my part. I pushed the implementation as far as
-modern JS would let me, and I let the project languish. I had all
-these things I'd wanted to add, but JS wouldn't let me.
+lack of attention on my part. I pushed the implementation as far as I
+could.
 
 ### On the Choice of Idris
 
-I started *rpncalc* two years ago, as an exercise in minimalist
-web-programming. It was a fun project that was fun to use, and I ended
-up *depending* on it. Distributing it as a stand-alone web page meant
-I always had access to it, wherever I went, on any device.
+Over the past couple years, I'd come do depend on my own tool. I
+decided to re-write *rpncalc* in a strongly-typed language to make it
+easier to maintain. There were three criteria:
 
-I have all these great features I want to add. Bugs I wnat to
-fix. Design mistakes I wanted to correct. Unfortunately, having chosen
-JavaScript, any kind of gradual refactoring was off the table -- even
-with my hand-rolled test suite, it's just too much work. I need types.
-
-So, I decided to re-write *rpncalc* in a strongly-typed
-language. There were three criteria:
-
-- It had to be an ML-derived language: I've long wanted to be able to read  Haskell and OCaML source.
+- It had to be an ML-derived language, as I really wanted to learn one.
 - Said language must target JavaScript, as I still want to distribute
   IRPN as stand-alone web page.
 - Said language must have dependent types, as I'm excited about their
@@ -58,7 +50,8 @@ about my experience][experience.md]
 ### caveats
 
 At present, only Firefox is supported, because that is my primary
-browser.
+browser. Chromium works with some glitches. I have not tested with
+Safari or Edge.
 
 ## Usage
 
