@@ -1,37 +1,3 @@
-
-Skip to content
-Pull requests
-Issues
-Codespaces
-Marketplace
-Explore
-@emdash
-emdash /
-irpn
-Public
-
-Fork your own copy of emdash/irpn
-
-Code
-Issues
-Pull requests
-Actions
-Projects
-Wiki
-Security
-Insights
-
-    Settings
-
-Deploy to pages
-Deploy to pages #12
-
-Jobs
-
-Run details
-
-Workflow file for this run
-.github/workflows/deploy-to-pages.yml at 6cd5e7d
 name: Deploy to pages
 
 on:
