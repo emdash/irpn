@@ -1,261 +1,220 @@
 # Overview
 
-I struggled even with Idris, at first. I started working with Idris in
-October 2022. It's April 2023 at the time of this writing, and I've
-*finally* begun to understand Idris.
+My primary motivation is to understand dependent types. I think Idris
+is a reasonable choice for those looking to understand types. If you
+have experience with Haskell, in particular, then Idris should seem
+familiar. Idris is more accessible than the alternatives I've tried so
+far.
 
-Life has been happening in the meantime -- but having the patience to
-work through [the
+Although I studied Computer Science at university, most of my
+exeprience is in industry and open-source development. My exposure to
+FP is mainly with LISP -- in particular, elisp and scheme, and of
+course modern JS, with a bit of Rust and Scala in recent years. So I
+have some intuition for ML type systems, but I'd never used any
+ML-family langauges before starting this project.
+
+I've tried to learn Haskell a few times over the years, but I could
+never find an appropriate resource aimed at industry veterans. Most of
+the resources out there assume you're either a rank beginner, or a
+grad student in PL research. I didn't have the time or inclination to
+work through either type of resource.
+
+The the situation isn't much better in Idris, but the lure of
+dependent types made it finally worth the pain of learning something
+very different from what I'm used to.
+
+## On dependent types
+
+I got a taste of dependent typing through systems like [FlowJS](TBD)
+and [TypeScript](TBD), which also offer some limited form of refinemnt
+and structural typing. Both of these systems effectively erase all
+type information at runtime, so while types may depend on terms, terms
+may not depend on types. And while type-level functions are supported,
+FlowJS, for example only supports a small handful of type-level
+primitives. Neither one offers full dependent typing.
+
+At this point, I'm definitely *using* dependent types, but I can't say
+I'm *leveraging* them to any good effect. Idris's type system is so
+powerful, one can avoid them altogether and not feel like anything is
+missing.
+
+I expect this will change as my understanding improves.
+
+If you're used to Haskell, then you should feel right at home in
+Idris. On the other hand, If you've *never* used an ML-family
+language, then you may find Idris quite challenging. I started working with
+Idris in October 2022, it's April 2023 at the time of this writing --
+, but I've *finally* begun to understand Idris.
+
+Having the patience to work through [the
 book](https://www.manning.com/books/type-driven-development-with-idris)
-paid off, and now I finally know enough to be write an Idris port of
-code originally written in JavaScript.
+paid off, and this project is proof that I'm learning how to be
+productive.
 
-## First Step: Read [The Book](https://www.manning.com/books/type-driven-development-with-idris)
+## What's Great about Idris
 
-Having only casual experience with Haskell and related languages, I
-found that working through [The
+- Holes
+- Skeleton definition insertion
+- Automatic case splitting
+- Repl experience
+- Type system provides high levels of confidence in code
+- Fixes many of [Haskell's warts](TBD)
+
+I plan to expand on these at some point.
+
+# My Path
+
+## Step 0: Install Idris
+
+Idris 1 I installed via cabal.
+
+Idris 2 I install via [pack](TBD).
+
+### Step 0.5: Configure your editor
+
+There's an apendix in *The Book* which documents configuration of the
+Atom editor. For emacs, you'll want to intall `idris-mode` via melpa
+or elpa, and then customize it to launch `idris2` instead of `idris`.
+
+#### Emacs Cheat Sheet
+
+[The
+Book](https://www.manning.com/books/type-driven-development-with-idris)
+uses Atom's key bindings, but I prefer emacs. There is an emacs mode
+for Idris, but it uses different key-bindings from Atom. And the key
+bindings use different naming.
+
+I had to look on google until I found the following [cheat
+sheet](TBD), which I'll summarize here:
+
+TBD
+
+## Step 1: Read *The Book*
+
+[The
 book](https://www.manning.com/books/type-driven-development-with-idris)
 was essential.
 
-It's accessible at the expense of being repetitious. I wished that
-later chapters focused mainly on the *changes* to the program source,
-rather than spelling out each step in detail. However, whenever I
-would skim ahead, I'd miss crucial details and make mistakes. On the
-other hand, some of those mistakes provided valuable experience in
-interpeting diagnostic messages from the type checker.
+It's accessible at the expense of being somewhat repetitious. But if
+you're new to ML-family syntax, you're not going nowhere without it.
 
-In all, the biggest gripe I have is that the book still assumes
-Idris 1. And while there is a [list of changes](TDD) available online,
-I didn't want to add any more to my already taxed cognitive load. I do
-think it's about time an updated edition of the book was published.
+I wished that later chapters presented the changes to each listing in
+some condensed form, rather than spelling out each step in
+detail. Often I would get the gist of what was happening, but the
+format made it hard to spot the changes at a glance. All I can say is:
+just be patient.
+
+Especially in the beginning, work through each exercise. Get used to
+the editor and its interactive features. After a few chapters,
+however, you should accumulate sufficient muscle memory.
+
+The biggest gripe I have is that the book still assumes Idris 1. And
+while there is a [list of changes](TBD) available online, I felt it
+was too much cognitive load. So I stayed with Idris 1 until I'd
+essentially finished *The Book*.
 
 In the mean time, there is [stephan hoeck's tutorial](TBD) which is a
-promising introduction to Idris2. I started working through it, but
-there was too much overlap with what I'd already covered. I plan to
-revisit it when I need a break from writing cod.e
+promising introduction to Idris 2. I started working through it, but
+there was too much overlap with what I'd already covered in *The
+Book*. I'll revisit it some day soon.
 
-## Bugs, Gotchas, and Advice
+## Step 2: Migrate to Idris 2
 
-What follows is a list of issues and nits that make Idris2 not quite
-production quality. I've spent a lot of time on the fringes of
+TBD
+
+## Step 3: Learn Pack
+
+TBD
+
+# Bugs, Gotchas, and Advice
+
+What follows is a list of issues, nits, and thinks I struggled with,
+in no particular order.  I've spent a lot of time on the fringes of
 computing, so nothing in here is a deal-breaker for me,
-personally. But consider how much these would affect you before diving
-in.
+personally. But consider how much these would affect you before
+choosing Idris.
 
-- Idris2 seems more stable than Idris1, I still manage to wedge my
-  editor session on a regular basis. If things start acting weird, try
-  restarting your editor before you do anything drastic.
+In general, I think it's fair to say that Idris 2 is not
+production-ready. I wouldn't entrust it to mission-critical or
+financially significant roles at ths point in time.
+
+However, it is *usable*, and I think in particular it's a good choice
+for an early-stage open-source project whose developers want something
+a bit like Haskell, but more streamlined.
+
+## Minor nits
+
+- I manage to wedge my editor session somewhat regularly. If things
+  start acting weird, try restarting your editor before you do
+  anything drastic.
 - It's possible to write code that type-checks, but can't be executed.
   - So run your code often!
 - It's possible to define types that you cannot implement.
+  - either because it's impossible, or because you don't know how to
+    write the necessary proofs.
   - write your types in parallel with some representative uses, to
     spot this early.
 - in the emacs mode, I have to type-check twice the first time I load
   a file.
   - the first time, it can't seem to find the file.
+- Compiler error messages can be inscrutable and misleading.
+  - If an error doesn't make sense, it might be a compiler issue.
 
 ## Practical Advice
 
-- Do all the exercises in the first few chapters of [the
-  book](https://www.manning.com/books/type-driven-development-with-idris)!
+- Do all the exercises in the first few chapters of *The Book*.
   - Type everything in yourself!
-  - Practice the key-strokes, as they are key to being productive in idris.
-- Compiler error messages can be inscrutable and misleading.
-  - If an error doesn't make sense, it might be a compiler issue.
+  - Practice the keystrokes, as they are *key* to being productive!
 - You can comment out to the end of the file with `{-`,
   - which is handy for figuring out where the error *really* is.
+  - Idris allows nested comments, so this always works!
 - Check into source control often.
 - Compile your whole project often
-- Write your `.ipkg` the minute your project goes beyond a single file.
-- Use [idris2-pack](TBD) the minute you decide you need an external dependency
+- Use [idris2-pack](TBD) to create your project and manage its dependencies.
 - Test and run your code in the REPL often.
 
 ## Emacs Cheat Sheet
 
-This wasn't in the book or the official documentation, but a bit of
-googleing found me this:
+## My Coding Style
 
-## Stuff that's Not in the Book
+See [the style guide](style.md)
 
-- using pack
+# Idris' Alternatives
 
-## A word about my coding style
+## Agda
 
-I found Idris' syntax to be deceptively terse. It can sometimes seem a
-bit strange that a bit of code does anything at all.
+I started with a Agda, but the learning resources are aimed at CS and
+PLT grad students.
 
-I found that my eye has been trained on the usual `function(argument1,
-argument2, ...)` syntax, and learning to visually parse Idris's
-`function argument1 argument 2` syntax was difficult. So one thing I
-tend to do is...
+The main thing I disliked about Agda is that, since it allows unicode
+in identifiers, and it allows arbitrary user-defined mixfix operators,
+people go crazy with this and try to make their source code look like
+the output of a LaTeX file.
 
-```
-align_patterns (Into        tables)          = ...
-align_patterns (Like        this)            = ...
-align_patterns (So          (that you)  can) = ...
-align_patterns (See         what)            =.
-align_patterns Matters                       = ...
-align_patterns AtAGlance                     = ...
-```
+But the real issue is just that all of the material I could find on
+the language was really aimed at people who wanted to write proofs,
+even though its just as much of a general-purpose programming language
+as Idris. All the examples are drawn from graduate-level PL theory and
+mathematics. I just didn't have a leg to stand on. Having learned
+Idris, I plan to take another look at Agda.
 
-I find this is easier to read than:
+## F*
 
-```
-not_aligning (Into tables)  = ...
-not_aligning (Which creates) = ...
-not_aligning (Rivers (of whitespace)) = ...
-not_aligning (That run through) = ...
-not_aligning (The (source code)) = ...
-not_aligning (In ways that obscure) = ...
-not_aligning (What (is happening)) = ..
-```
+I moved on to F\*, which at least offers accessible introductory
+materials.
 
+But I couldn't find any intermediate documentation. Again, what I
+*was* able to find was fairly dense stuff: in this case, aimed at
+writing verified low-level cryptographic routines.
 
-Though as time goes on, I need this visual aid less, I find It's
-easier to edit, so long as your text editor emacs supports rectangular
-edits. Vim, emacs, helix, and kakoune all do this.
+What's interesting about F\* is that a subset of it can be extracted
+to C. So you can write, for example, some tricky array processing
+function, passing around a bunch of erased proofs that you never
+access outside the array bounds. And the result is converted to
+somewhat readable C, which you can run basically anywhere. Wouldn't
+*that* be useful?
 
-The default idris style is not something I particularly care for, and
-whitespace is significant in Idris. I'm not a fan of this, in general.
+F\* also has a very convenient notation for refinement types.
 
-If I could, I'd format definitions with an outer `let` block like
-this:
-
-```
-someFunction : Takes -> Some -> Args -> ReturnType
-someFunction a b c = let
-  def = munge a b
-in helperFunction (munge a b) where
-  helperFunction : Arg -> HelperReturnType
-```
-
-Sadly, Idris2 is a *lot* more picky about indentation than Idris1. So
-this is how I have to format it in Idris2:
-
-```
-someFunction : Takes -> Some -> Args -> ReturnType
-someFunction a b c =
-  let def = munge a b
-  in helperFunction (munge a b)
-  where
-	helperFunction : Arg -> HelperReturnType
-	...
-```
-
-If the outer let block has multiple definitions, I format like this:
-
-```
-someFunction : Takes -> Some -> Args -> ReturnType
-someFunction a b c =
-  let
-	def1     = munge a b
-	def2     = frobmugate def1 a
-	flombast = def1 def2
-  in
-	helperFunction (flobmbasticate flombast def2)
-  where
-	helperFunction : Arg -> HelperReturnType
-	...
-```
-
-I strongly dislike code formatted like this. Unfortunately, this is
-what emacs wants to do if left to its own devices.
-
-```
-someFunction : Takes -> Some -> Args -> ReturnType
-someFunction a b c = let
-                     def = munge a b
-					 in helperFunction (munge a b)
-  where
-	helperFunction : Arg -> HelperReturnType
-	....
-```
-
-When a type signature has a lot of parameters, or when the parameters
-themselves have a lot of details, I break them up into multiple
-lines. If I *could* I would do it like *this*.
-
-```
-aHungryUngryFunction
-	:  TypeConstraint    a  -- note two-spaces after the colon
-	=> AnotherConstraint b  -- thta keeps everything flush
-	=> {an_implicit : SomeType }
-	-> (a : FirstRealArg)
-	-> SecondRealArg
-	-> ThirdRealArg
-	-> FourArg
-	-> ReturnType
-aHungryFunction
-	(Case1 a)
-	b
-	c
-	d
-=
-	...function body
-```
-Sadly, idris requires the `=` be indented at least one level, so you
-have to write it like this:
-
-```
-aHungryUngryFunction
-	:  TypeConstraint    a  -- note two-spaces after the colon
-	=> AnotherConstraint b  -- thta keeps everything flush
-	=> {an_implicit : SomeType }
-	-> (a : FirstRealArg)
-	-> SecondRealArg
-	-> ThirdRealArg
-	-> FourArg
-	-> ReturnType
-aHungryFunction
-	(Case1 a)
-	b
-	c
-	d
-	= ...function body
-```
-
-
-If a function body fits on one line, I leave it that way.
-
-```
-imAShortFunction : String -> Bool
-imAShortFunction s = length s < 10
-```
-
-If they're *really* short, I put everything on one line
-
-```
-foo : String -> bool ; foo = length s < 10
-```
-
-If a series of similar definitions are consecutive, these also become
-a table, to avoid the "rivers of whitespace" and help highlight what
-actually matters.
-
-```
-foo  x : String -> bool ; foo  x = length s < 10
-bar  x : String -> bool ; bar  x = length s < 2
-baz  x : String -> bool ; baz  x = length s < 3
-quux x : String -> bool ; quux x = length s < 15
-```
-
-## My Experience with Idris' Alternatives
-
-I started with a Agda, but the learning resources are aimed at CS grad
-students.
-
-I moved on to F\*, which had accessible documentation. But I couldn't
-find any intermediate documentation. What I could find was pretty
-dense stuff about passing proofs and extracting code to C so you can
-write verified crypto functions. F\* is certainly worth another look
-if it can do those things, but I just couldn't understand how to use
-it.
-
-Finally, having exhausted all other options, I tried Idris, for which
-there's [the
-book](https://www.manning.com/books/type-driven-development-with-idris)
-from. The PDF from Manning press iis DRM-free, so I could me read it
-on my open-source e-reader.
-
-I plan to revisit both Agda and F* after I've done a bit more work in
-Idris.
+It's not clear to me if F\*'s type system is as powerful as Idris' or
+Agda's, but it too seems worth another look.
