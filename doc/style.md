@@ -1,40 +1,42 @@
 # Overview
 
-I found Idris' syntax to be deceptively terse on the one hand, and
-"curiously recurring" on the other. Sometimes, it feels a bit strange
-and magical that Idris code does anything at all. My style evolved to
-help me make sense of the language, by arranging things in ways that
-either felt familiar to me, or else helped to reduce "visual clutter".
+My style evolved to help me make sense of the language, by arranging
+things in ways that either felt familiar to me, or else helped to
+reduce "visual clutter".
 
 My style is still evolving. I haven't set up any style lints, because
 at this stage I reserve the right to change my mind. So what follows
 is *descriptive* rather than *prescriptive*, except for one major pet
 peeve which I've clearly identified.
 
-If you find yourself working on a project in Idris, keep in mind I
-barely know the language. Please do *not* use this guide to justify
-violating style rules in someone else's project.
+Please do *not* use this guide to justify violating style rules in
+someone else's project.
 
-What I will say is that if you're coming from mainstream languages,
-you *might* find these style "hints" helpful for you as well. This is
-just my opinion, I have absolutely no data to back this up. Let me
-know how it goes, either way.
+If you're coming from mainstream languages, you *might* find these
+style "hints" helpful. This is just my opinion, I have absolutely no
+data to back this up. Let me know how it goes.
 
-## Tabulating
+## Line Length
 
-I found that my eye has been trained on the usual `function(argument1,
-argument2, ...)` syntax, and training my eye to read Idris' "curiously
-recurring" patterns of syntax has taken a while.
+I am trying to keep lines under 100 characters, preferring 80. I'm not
+enforcing this rule, however. I recognize that there's situations
+where long lines are either necessary or more readable.
 
-One thing I started doing quite early is aligning code into tables.  I
-call this "tabulation" or "tabulating". For example:
+It's "best effort". I won't leave long lines in the code when I can
+easily avoid it. But in a few cases I prioritize tabulation over line
+length.
+
+## Tabulation
+
+One thing I started doing quite early is aligning code into tables,
+which I find makes things easier to understand.
 
 ```
 aligning_patterns (Into tables) = ...
 aligning_patterns (Like   this) = ...
 ```
 
-...is easier to read than:
+...can be easier to read than:
 
 ```
 not_aligning (Into tables)  = ...
@@ -44,36 +46,32 @@ not_aligning (That run through) = ...
 not_aligning (The (source code)) = ...
 ```
 
-This also applies to function bodies, case expressions, let blocks,
-and data definitions.
-
 Unfortunately, I still don't fully understand what "algorithm" I'm
-using in my head to do this. For the moment, it's completely
-subjective and arbitrary.
+using in my head to do this. What matters is how similar the text on
+consecutive lines happens to be, and how many similar lines appear
+consecutively.
 
-A rule of thumb is to align around characters that that repeat in the
-"same logical position" across lines. So, this obviously applies to
-separators like `,`, `:`, `=`, and `->` -- but hold on: `(` and `)`
-are often *not* a good choice, because their "logical position tends
-to vary across lines (except when it doesn't).
+A rule of thumb is to align around separators that that repeat in the
+"same logical position" across lines, namely: `,`, `:`, `=`, and `->`.
 
-In any case, the goal of "tabulation" is to highlight the differences
-across lines by making everything that's "the same" line up and
-thereby become part of the "background", leaving the things which are
-different across lines to become the "foreground". Look! I'm using art
-metaphors! Code is like art!
+This may bloat the line length by a few chars, or but sometimes it
+results in a very wide table.
 
-I'm don't think I'd recommend this style rule for a large institution,
-unless you can reliably automate it. In fact, I probably spend too
-much time tabulating code. But for now, I pretty much depend on it.
+The goal of "tabulation" is to highlight the differences across lines.
+By aligning text that's "the same", it becomes part of the
+"background", leaving the text which varies to become the
+"foreground".
+
+I probably spend too much time tabulating code. But for now, I like
+the way it looks, and I find it a useful crutch.
 
 ### Historical Aside
 
-In the past, this sort of thing was frowned upon -- the main reason
-being that a change to one line often triggers reformatting of the
-entire table, bloating patches in ways that early code review tools
-didn't handle well at all. Also, not everyone uses a proper text
-editor which can make block edits.
+In the past, tabulating code was frowned upon -- the main reason being
+that a change to one line often triggers reformatting of the entire
+table, bloating patches in ways that early code review tools didn't
+handle well at all. Also, not everyone uses a proper text editor which
+can make block edits.
 
 Code review tools have come along way in the past decade -- today,
 they are quite good at visually distinguishing changes to whitespace
@@ -89,8 +87,8 @@ tools I use.
 
 ## Short definitions on one line
 
-One thing I do like about idris is that short definitions can fit on
-one or two lines:
+One thing I like about idris is that short definitions can fit on one
+or two lines:
 
 ```
 imAShortFunction : String -> Bool
@@ -115,13 +113,13 @@ quux x : String -> bool ; quux x = length s < 15
 One downside to the above: it discourages doc comments. So I should
 probably avoid this rule for exported functions. What a pity.
 
-## Function Definitions
+## Function Definitions with Outer Let Block
 
-Whitespace is significant in Idris. I'm not a fan of this, in general
--- I tolerate it in Python -- but in Idris gets in the way of my
-prefered style.
+Whitespace is significant in Idris (which I'm less enamored with,
+these days, but I digress). This constrains the ways in which code may
+be formatted.
 
-If I could, I'd format definitions with an outer `let` block like
+In Idris 1, I would format definitions with an outer `let` block like
 this:
 
 ### Idris 1 Style
@@ -135,9 +133,9 @@ in helperFunction bar a b where
   helperFunction : Arg -> HelperReturnType
 ```
 
-In fact, Idris 1 lets me do this.  Sadly, Idris 2 is a *lot* more
-picky about indentation, and it won't allow `in` or `where` to be
-left-justified. So, I settled for this compromise with Idris 2.
+Sadly, Idris 2 is a *lot* more picky about indentation, and it won't
+allow `in` or `where` to be left-justified. So, I settled for these
+compromises with Idris 2:
 
 ### Idris 2 Style
 
@@ -151,11 +149,11 @@ someFunction a b c =
     ...
 ```
 
-Or, if there are multiple let bindings, then I format like this:
+Or, with multiple let bindings:
 
 ```
 someFunction : Takes -> Some -> Args -> ReturnType
-someFunction a b c =
+someFunction a b c =              -- newline after `=`
   let
     def1     = munge a b          -- tabulate the let bindings
     def2     = frobmugate def1 a
@@ -181,17 +179,22 @@ someFunction a b c = let def = munge a b            -- indent way too far!
 ```
 
 Unfortunately, this is the *dominant* style for a lot of Haskell and
-Idris source. And I can't stand it! It's such pointless waste of
-horizontal space.
+Idris source. I just can't stand it! It's such pointless waste of
+horizontal space, and it looks really ugly to me. I personally prefer,
+and default to, an indent offset of *two spaces*, *period*.
 
-So-called "rightward drift" is as much a problem in Idris as in any
-other language, and personally I see no reason to use more than two
-spaces per indent level, *ever*, *in any language*, *period*.
+I indent enough to make the nesting structure clear, and no more. I
+keep it consistent within a given codebase, whether it's two spaces,
+or four. I *do not* indent to align with tokens on the previous line
+*just because*.
 
-Indent enough to make the lexical structure clear, and no more. If,
-for your project or language, that's three spaces, or four -- then
-fine. Whatever. But that style above? I don't care how popular it is,
-I refuse to format code that way.
+If I'm going to "waste" horizontal space, then I prefer to "waste" it
+on tabulation.
+
+The point has been made elsewhere that arguments about style are in
+and of themselves a waste of time. This is is a personal project. So
+I'm putting my foot down about this one thing. I will *not* use the
+*accursed indent*, and that's that.
 
 ## Type signatures and parameter lists
 
@@ -262,11 +265,8 @@ indent*, described in the previous section.
 
 ### Aside: "Arrow East vs Arrow West"
 
-What I don't like about this style is that the separator arrows
-between constraints and arguments appear on the line *below* the thing
-apply to:
-
-Consider a definition like:
+What I don't like about this style is that the separators appear on
+the line *below* the thing apply to. Consider a definition like:
 
 ```
 foo : Num a => Maybe a -> a
@@ -276,7 +276,7 @@ This means that `foo` takes an argument of type `Maybe a`, where `a`
 must be an instance of `Num`, The `=>` applies to the preceeding
 tokens (`Num a`).
 
-But suppose we format like this:
+Using my preferred style, we get:
 
 ```
 foo
@@ -285,13 +285,11 @@ foo
   -> a
 ```
 
-Now, it's a bit less obvious that `Num a` is a type constraint, and
-not an argument. You have to pay attention to whether the arrow is fat
-or skinny.
-
 Type constraints appear at the beginning of signatures, so it's not
 *that* ambigious if you know the language. But one could make the case
 for an "Arrow East" style:
+
+#### Tabulated
 
 ```
 aHungryUngryFunction :
@@ -305,7 +303,7 @@ aHungryUngryFunction :
 aHungryFunction (Case1 a) b c = oneLine a (b c)
 ```
 
-Or even:
+#### Untabulated
 
 ```
 aHungryUngryFunction :
@@ -319,9 +317,9 @@ aHungryUngryFunction :
 aHungryFunction (Case1 a) b c = oneLine a (b c)
 ```
 
-The thing is: I've been reading a lot of Idris source lately, and this
-style seems rare to be somewhat rare. In this instance, I defer to
-convention and format definitions in "arrow west".
+I'm not actually sure how the community feels about this in general. I
+am using "Arrow West", since that style seems to be prevalent. I'm
+open to changing my mind about this.
 
 ## Data Definitions
 
@@ -356,10 +354,12 @@ data MyWordyEnum
 Indexed type definitions are basically always multi-line.
 
 The key difference is that I tabulate parameters in a
-"right-justified" fashion: all indexed variants must end by naming the
-type under definition -- I sometimes wish that Idris had something
-equivalent to Rust's `Self` keyword -- and I find it distracting if
-these tokens don't visually align:
+"right-justified" fashion. Since all indexed variants must end by
+naming the type under definition -- I sometimes wish that Idris had
+something equivalent to Rust's `Self` keyword -- and I find it
+distracting if these tokens don't visually align:
+
+#### Tabulated
 
 ```
 data CoolDependentType : Nat -> Type -> Type where
@@ -369,24 +369,18 @@ data CoolDependentType : Nat -> Type -> Type where
   Quux :              CoolDependentType a b -> CoolDependentType (S a) b
 ```
 
-At least for me, this makes it easier to spot that the `Quux` variant
-takes one argument of a related `CoolDependentType`, and how the
-indices of each variant are related to each other.
-
 Related note: I found the syntax of indexed type definitions to be the
 single-most confusing aspect of Idris and its siblings. This style is
-how I managed to make sense of them.
+how I began to make sense of them.
 
-Indexed type definitions often won't fit into 120 columns, let
-alone 80. In some cases I factor out type aliases to compress the
-table, but this can cause issues with type checking, and is often more
-trouble than it's worth. I prefer tabulation over keeping line length
-down.
+When tabulated like this, such a definition often won't fit into 120
+columns, let alone 80. I still prefer tabulation over keeping line
+length down, in this instance.
 
 Having said all this, I'm least committed to this aspect of my Idris
-style, and even I find it somewhat pedantic. I would consider the
-following "vertical" style acceptable, and I suspect I'll start
-favoring this after a while.
+style. I find the following vertical style acceptable
+
+#### Vertical
 
 ```
 data CoolDependentType : Nat -> Type -> Type where
@@ -420,8 +414,8 @@ record VeryImportandData
 ```
 
 At a minimum, tabulate on the `:`, whose column position is dictated
-by the longest field name. If multiple fields take type parameters,
-I tabulate the type parameters too. Except when I don't, as above.
+by the longest field name. If multiple fields take type parameters, I
+tabulate the type parameters too. Except when I don't, as above.
 
 I don't use record types that often in Idris, as they're really more
 of a special case, rather than the default.
