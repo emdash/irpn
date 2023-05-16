@@ -75,19 +75,19 @@ public export
 unpack : Rat -> (Integer, Nat)
 unpack (MkRat num denom _) = (num, denom)
 
+||| Apply f on the cross-multiplication of a and b
+withCrossMul : (Integer -> Integer -> a) -> Rat -> Rat -> a
+withCrossMul f a b = f (a.num * cast b.denom) (b.num * cast a.denom)
+
 ||| Add two rational numbers
 public export
 add : Rat -> Rat -> Either String Rat
-add a b = rat
-  (a.num * (cast b.denom) + b.num * (cast a.denom))
-  (a.denom * b.denom)
+add a b = rat (withCrossMul (+) a b) (a.denom * b.denom)
 
 ||| Subtract two rational numbers
 public export
 sub : Rat -> Rat -> Either String Rat
-sub a b = rat
-  (a.num * (cast b.denom) - b.num * (cast a.denom))
-  (a.denom * b.denom)
+sub a b = rat (withCrossMul (-) a b) (a.denom * b.denom)
 
 ||| Compute the multiplicative inverse of the given rational number
 public export
@@ -118,10 +118,21 @@ pow r exp =
     pow_nat x 0     = rat 1 1
     pow_nat x (S k) = mul x !(pow_nat x k)
 
+||| True if a is strictly less than b
+lt  : Rat -> Rat -> Bool ; lt  = withCrossMul (<)
+lte : Rat -> Rat -> Bool ; lte = withCrossMul (<=)
+gt  : Rat -> Rat -> Bool ; gt  = withCrossMul (>)
+gte : Rat -> Rat -> Bool ; gte = withCrossMul (>=)
+
+{-
+
 ||| Approximate a to the nearest 1/b
 public export
 approx : Rat -> Nat -> Either String Rat
-approx rat denom = Left "Unimplemented"
+approx rat denom =
+  let
+    limit =
+  -}
 
 public export
 abs : Rat -> Either String Rat
