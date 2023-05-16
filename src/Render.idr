@@ -410,7 +410,7 @@ carret (Just v) =
 contents : Accum -> VDom
 contents Empty         = carret (the (Maybe Nat) Nothing)
 contents (Digits i)    = carret (Just i)
-contents (Decimal i j) = carret (Just (toString i ++ "." ++ toString j))
+contents (Decimal i j) = carret (Just (toString i ++ "." ++ (pack $ toList j)))
 contents (Num 0 j)     = math () (fraction (carret j) "?")
 contents (Num i j)     = math () (mixed i (carret j) "?")
 contents (Denom 0 j k) = math () (fraction j (carret k))
