@@ -349,9 +349,9 @@ data MyWordyEnum
   | ThatScoundrelBaz           String
 ```
 
-### Indexed Types
+### Dependent Types
 
-Indexed type definitions are basically always multi-line.
+Dependent type definitions are basically always multi-line.
 
 The key difference is that I tabulate parameters in a
 "right-justified" fashion. Since all indexed variants must end by

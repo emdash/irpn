@@ -49,8 +49,8 @@ unlimited. So be bold, and calculate without fear.
 ## The swap key
 
 - Sometimes you enter operands in the wrong order. You can use the
-  swap key ![swap key!](images/swap.png) to exchange the top two stack
-  elements in this case.
+  *swap key* (`⬍`) to exchange the top two stack elements in this
+  case.
 
 ## Variables
 
@@ -77,16 +77,18 @@ and fuscia for rationals.
 The input register supports entering fractions and mixed numbers
 directly.
 
-![fractions mode!](images/fractions.png)
-
 When you enter fraction mode (`frac`), the decimal key is replaced
 with the fraction key.
 
-The fraction key works like the decimal key: it separates the numerator from the denomiator.
+The fraction key works like the decimal key: it separates the
+numerator from the denomiator.
 
-To enter the fraction `3/4`, tap `3` `x/y` `4` `Enter`.
+To enter the fraction <tt>$3 \over 4$</tt>, tap `3`
+<tt>$x \over y$</tt> `4` `Enter`.
 
-To enter the mixed number `3-3/4`, tap `3` `x/y` `3` `x/y` `4` `Enter`.
+To enter the mixed number <tt>$3 {3 \over 4}$</tt>, tap `3`
+<tt>$x \over y$</tt> `3` <tt>$x \over y$</tt> `4` `Enter`.
 
 Fractions are also automatically created if you take the quotient of
-two integers that are not divisible. For example, the `3/4` can also be entered by tapping: `3` `Enter` `4` `divide`.
+two integers that are not divisible. For example, the
+<tt>$3 \over 4$</tt> can also be entered by tapping: `3` `Enter` `4` `÷`.
