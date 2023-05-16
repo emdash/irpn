@@ -63,17 +63,17 @@ emacs equivalents:
 
 | Atom Keybinding | Emacs Keybinding | Meaning                                                                      |
 |-----------------|------------------|------------------------------------------------------------------------------|
-| Ctrl + Alt A    | C-c C-s          | Add skeleton definition                                                      |
-| Ctrl + Alt C    | C-c C-c          | Case split                                                                   |
-| Ctrl + Alt D    | C-c C-d d        | Display documentation for symbol under cursor                                |
-| Ctrl + Alt L    | C-c C-e          | Lift hole to top-level definition                                            |
-| Ctrl + Alt M    | C-c C-c          | Replace hole with case expression                                            |
-| Ctrl + Alt R    | C-c C-l          | Reload and type-check                                                        |
-| Ctrl + Alt S    | C-c C-a          | Searches for an expression which satisfies the type of the hole under cursor |
-| Ctrl + Alt T    | C-c C-t          | Display type of symbol under cursor                                          |
-| Ctrl + Alt W    | C-c C-w          | Add a with block under current line                                          |
+| `Ctrl + Alt A`  | `C-c C-s`        | Add skeleton definition                                                      |
+| `Ctrl + Alt C`  | `C-c C-c`        | Case split                                                                   |
+| `Ctrl + Alt D`  | `C-c C-d d`      | Display documentation for symbol under cursor                                |
+| `Ctrl + Alt L`  | `C-c C-e`        | Lift hole to top-level definition                                            |
+| `Ctrl + Alt M`  | `C-c C-c`        | Replace hole with case expression                                            |
+| `Ctrl + Alt R`  | `C-c C-l`        | Reload and type-check                                                        |
+| `Ctrl + Alt S`  | `C-c C-a`        | Searches for an expression which satisfies the type of the hole under cursor |
+| `Ctrl + Alt T`  | `C-c C-t`        | Display type of symbol under cursor                                          |
+| `Ctrl + Alt W`  | `C-c C-w`        | Add a with block under current line                                          |
 
-*Note:* C-c C-c has two functions, this isn't a typo.
+*Note:* `C-c C-c` has two functions, this isn't a typo.
 
 [Source](https://github.com/idris-hackers/idris-mode#interactive-editing)
 
@@ -95,29 +95,27 @@ It's accessible at the expense of being somewhat repetitious. But if
 you're new to ML-family syntax, you should work through the first 9 -
 11 chapters at least.
 
-I wished that later chapters presented the changes to each listing in
-some condensed form, rather than spelling out each step in
+I wished that later chapters presented the *changes* to each listing
+in some typographic form, rather than spelling out editing step in
 detail. Often I would get the gist of the material, but the format
-made it hard to spot the changes at a glance. All I can say is: just
-be patient.
+made it hard to spot the changes at a glance -- and was a bit
+tedious. All I can say is: just be patient.
 
-Especially in the beginning, work through each exercise. Get used to
-the interactive editing commands. After a few chapters, you should
-accumulate sufficient muscle memory to not need the cheat sheet.
+Work through each exercise! Get used to the interactive editing
+commands. After a few chapters, you should accumulate sufficient
+muscle memory to not need the cheat sheet.
 
 The biggest gripe I have is that the book still assumes Idris 1. Idris
 2 has been around for a few years at this point, and Idris 1 is
 essentially dead. So, while there is a [list of
 changes](https://idris2.readthedocs.io/en/latest/typedd/typedd.html)
-available online, I felt this was too much cognitive load. So I used
-Idris 1 until I was done with the book. But I really wish they'd do an
-Idris 2 edition.
+available online, I felt it was too much cognitive load to start with
+Idris 2. So I used Idris 1 until I was done with the book. But I
+really wish they'd do an Idris 2 edition.
 
 In the mean time, there is [stephan hoeck's
 tutorial](https://github.com/stefan-hoeck/idris2-tutorial) which is a
-promising introduction to Idris 2. I started working through it, but
-there was too much overlap with what I'd already covered in *The
-Book*. I'll revisit it some day soon.
+promising introduction to Idris 2. I'll revisit it some day soon.
 
 ## Step 2: Migrate to Idris 2
 
@@ -126,31 +124,32 @@ I installed Idris 2 via
 
 If you install this way, you can also use pack for dependency
 management in your idris projects, which is important because Idris
-has a relatively small standard library, which is missing things you
+has a relatively small standard library that is missing things you
 might expect -- like hashtables.
 
 # Bugs, Gotchas, and Advice
 
-What follows is a list of issues, nits, and thinks I struggled with,
-in no particular order.
+What follows is a list of things I struggled with, in no particular
+order.
 
 In general, I think it's fair to say that Idris 2 is not
 production-ready. However, it is *usable*.
 
 ## Minor nits
 
-- I manage to wedge my editor session somewhat regularly. If things
-  start acting weird, try restarting your editor before you do
-  anything drastic with your code.
+- In the emacs mode, I have to type-check twice the first time I load
+  a file.
+  - the first time, it complains it can't find the file.
+  - just hit it again, and it works after that.
+- I manage to wedge my editor session somewhat regularly.
+  - If things start acting weird, try restarting your editor before
+    you do anything drastic with your code.
 - It's possible to write code that type-checks, but can't be executed.
   - So run your code often!
 - It's possible to define types that you cannot implement.
   - either because it's impossible, or because you're not smart enough
   - write your types in parallel with some representative uses, to
     spot this early.
-- in the emacs mode, I have to type-check twice the first time I load
-  a file.
-  - the first time, it can't seem to find the file.
 - Compiler error messages can be inscrutable and misleading.
   - If an error doesn't make sense, it might be a compiler issue.
   - Often the error message will highlight the wrong portion of the source code
@@ -172,7 +171,12 @@ production-ready. However, it is *usable*.
 - Use [idris2-pack](https://github.com/stefan-hoeck/idris2-pack) to
   create your project and manage its dependencies.
 - Compile your whole project often via `pack build`
-- Lean on the repl to test and run your code
+  - Interactive type-checking only checks the current file and its
+    dependencies.
+  - You can break code in other files, and not realize it unless you
+    happen to switch files.
+  - So compile your whole project often.
+- Lean on the repl to check and run your code quickly
 - use holes to type-check incomplete files
 
 ## My Coding Style
