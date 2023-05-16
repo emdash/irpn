@@ -1,14 +1,15 @@
-# Mobile-First RPN Calculator written in Idris
+# IRPN: A Mobile-First RPN Calculator in [Idris](https://idris-lang.org)
 
 ![screenshot!](screenshot.png)
 
-- Uses reverse-polish notation ([RPN](https://en.wikipedia.org/wiki/Reverse_Polish_notation))
-- visible stack
-- visible variable environment
-- Unlimited undo and redo
-- Fraction mode
-- Single-page
-- Mobile-first, responsive layout.
+- [x] Single-page app
+- [x] Uses reverse-polish notation
+	  ([RPN](https://en.wikipedia.org/wiki/Reverse_Polish_notation))
+- [x] visible stack
+- [ ] visible variable environment
+- [x] Unlimited undo and redo
+- [x] Fraction mode
+- [x] Mobile-first, responsive layout.
 
 You can try it [here!](https://emdash.github.io/irpn)
 
@@ -16,33 +17,55 @@ You can try it [here!](https://emdash.github.io/irpn)
 
 ### Motivation
 
-This is an idris port of my original pure JavaScript calculator,
-available [here](https://github.com/emdash/rpncalc)
+Two years ago, I wrote [an RPN
+calculator](https://github.com/emdash/rpncalc), as an exercise in
+minimalist web-programming. *irpn* is a total rewrite in
+[Idris](https://idris-lang.org)
 
-I'd been itching to re-write *rpncalc* in a langauge with strong
-types. I hope that using Idris will allow me to add advanced features.
+The original RPN calculator will remain available, but I no longer
+intend to develop it.
 
-The original RPN calculator will remain available, but suffers from a
-lack of attention on my part. I pushed the implementation as far as
-modern JS would let me, and then started losing interest.
+### On the Choice of Idris
 
-Of course, the main goal is to help me learn Idris by doing something
-something non-trivial with it.
+There were three criteria in chosing Idris:
 
-### Caveats
+- It wanted to learn an ML-derived language.
+- The language needed to target JavaScript, as I still wanted to
+  distribute IRPN as a static single-page app.
+- I wanted to try dependent types.
 
-At present, only Firefox is supported, because that is my primary
-browser.
+Haskell, PureScript, Reason, and Elm, were ruled out for lack of
+dependent types.
+
+You can read about my experience [here](doc/experience.md).
+
+### Browser Support
+
+*irpn* only officially supports Firefox. However, I've made no effort
+to prevent you from using *irpn* with other browsers. Your milage may
+vary.
+
+If you notice a bug, feel free to file an issue. Better still if you
+have a fix.
+
+Most of the core behavior is written in pure Idris, and so shouldn't
+depend on the behavior of particular browsers.
+
+One key exception, as ever, is CSS. Getting CSS to work consistently
+across browsers is a sisyphean chore and I take no joy in it. Firefox
+is my preferred browser, so suporting it is my primary concern.
 
 ## Usage
 
-This section is TBD. For now, refer to the readme from [my previous
-project](https://github.com/emdash/rpncalc)
+See the [manual](doc/usage.md)
 
 ### Roadmap
 
 - [x] get javascript compilation working
 - [ ] implement all the functions present in the JS version
+  - [ ] `approx` for rationals
+  - [ ] Coercion between `Double` and `Rat`
+  - [ ] Log with arbitrary base
 - [x] port UX scaffolding and stylesheets from rpncalc
 - [x] implement rendering
 - [ ] persist sessions via local storage
