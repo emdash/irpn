@@ -78,7 +78,7 @@ public export
 data Accum : Type where
   Empty   :                                        Accum
   Digits  :                       Integer       -> Accum
-  Decimal :            Integer -> Nat           -> Accum
+  Decimal :            Integer -> SnocList Char -> Accum
   Num     :            Integer -> Maybe Nat     -> Accum
   Denom   : Integer -> Integer -> Maybe Nat     -> Accum
   Id      :                       SnocList Char -> Accum
@@ -115,7 +115,7 @@ digitToChar Nine  = '9'
 enterDigit : Accum -> Digit -> Accum
 enterDigit Empty                   d = Digits      (foldDigit 0  d)
 enterDigit (Digits      ds)        d = Digits      (foldDigit ds d)
-enterDigit (Decimal i   ds)        d = Decimal i   (foldDigit ds d)
+enterDigit (Decimal i   ds)        d = Decimal i   (ds :< digitToChar d)
 enterDigit (Num     i   Nothing)   d = Num     i   (Just (foldDigit 0  d))
 enterDigit (Num     i   (Just ds)) d = Num     i   (Just (foldDigit ds d))
 enterDigit (Denom   i n Nothing)   d = Denom   i n (Just (foldDigit 0  d))
@@ -135,8 +135,8 @@ enterAlpha _      _ = Nothing
 |||
 ||| This is only allowed when the accumulator is empty or contains digits.
 enterPoint : Accum -> Maybe Accum
-enterPoint Empty      = Just (Decimal 0 0)
-enterPoint (Digits i) = Just (Decimal i 0)
+enterPoint Empty      = Just (Decimal 0 Lin)
+enterPoint (Digits i) = Just (Decimal i Lin)
 enterPoint _          = Nothing
 
 ||| Send the faction symbol to the accumulator
@@ -179,7 +179,7 @@ public export
 value : Accum -> Either Error Value
 value Empty                = Left "Accumulator is empty."
 value (Digits i)           = Right  (I i)
-value (Decimal i j)        = case parseDouble ((show i) ++ "." ++ (show j)) of
+value (Decimal i j)        = case parseDouble ((show i) ++ "." ++ (pack $ toList j)) of
   Nothing                  => Left "Invalid Double"
   Just f                   => Right (F f)
 value (Num i n)            = Left "Incomplete fraction."
