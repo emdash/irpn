@@ -90,14 +90,14 @@ tools I use.
 One thing I like about idris is that short definitions can fit on one
 or two lines:
 
-```
+```Idris
 imAShortFunction : String -> Bool
 imAShortFunction s = length s < 10
 ```
 
 If they're *really* short, I put everything on one line:
 
-```
+```Idris
 foo : String -> bool ; foo = length s < 10
 ```
 
@@ -124,7 +124,7 @@ this:
 
 ### Idris 1 Style
 
-```
+```Idris
 someFunction : Takes -> Some -> Args -> ReturnType
 someFunction a b c = let
   foo = munge a b
@@ -139,7 +139,7 @@ compromises with Idris 2:
 
 ### Idris 2 Style
 
-```
+```Idris
 someFunction : Takes -> Some -> Args -> ReturnType
 someFunction a b c =
   let def = munge a b
@@ -151,7 +151,7 @@ someFunction a b c =
 
 Or, with multiple let bindings:
 
-```
+```Idris
 someFunction : Takes -> Some -> Args -> ReturnType
 someFunction a b c =              -- newline after `=`
   let
@@ -169,7 +169,7 @@ someFunction a b c =              -- newline after `=`
 
 I *strongly* dislike code formatted like this:
 
-```
+```Idris
 someFunction : Takes -> Some -> Args -> ReturnType
 someFunction a b c = let def = munge a b            -- indent way too far!
                      in helperFunction (munge a b)  -- why?!
@@ -204,7 +204,7 @@ line.  If I *could* I would format like *this*.
 
 ### Idris 1 Style
 
-```
+```Idris
 aHungryUngryFunction
   :  TypeConstraint    a          -- note two-spaces after the colon
   => AnotherConstraint b          -- so everything is is flush
@@ -227,7 +227,7 @@ compromises:
 
 ### Idris 2: One Line Body
 
-```
+```Idris
 aHungryUngryFunction
   :  TypeConstraint    a
   => AnotherConstraint b
@@ -245,7 +245,7 @@ function definition.
 
 ### Idris 2: Multi-Line Body
 
-```
+```Idris
 aHungryUngryFunction
   :  TypeConstraint    a
   => AnotherConstraint b
@@ -268,7 +268,7 @@ indent*, described in the previous section.
 What I don't like about this style is that the separators appear on
 the line *below* the thing apply to. Consider a definition like:
 
-```
+```Idris
 foo : Num a => Maybe a -> a
 ```
 
@@ -278,7 +278,7 @@ tokens (`Num a`).
 
 Using my preferred style, we get:
 
-```
+```Idris
 foo
   :  Num   a
   => Maybe a
@@ -291,7 +291,7 @@ for an "Arrow East" style:
 
 #### Tabulated
 
-```
+```Idris
 aHungryUngryFunction :
   TypeConstraint    a          =>
   AnotherConstraint b          =>
@@ -305,7 +305,7 @@ aHungryFunction (Case1 a) b c = oneLine a (b c)
 
 #### Untabulated
 
-```
+```Idris
 aHungryUngryFunction :
   TypeConstraint    a =>
   AnotherConstraint b =>
@@ -330,7 +330,7 @@ but there's a few things to highlight:
 
 #### Short Definitions on on line
 
-```
+```Idris
 data MyEnum = Foo | Bar | Baz
 ```
 
@@ -342,7 +342,7 @@ line then each variant lives on its own line, in "pipe west"
 style. Also, if variants take parameters, then they should be
 tabulated.
 
-```
+```Idris
 data MyWordyEnum
   = MostElegentAndHonorableFoo String    String
   | MostReliableAndWorthyBar   (Maybe a) String
@@ -361,7 +361,7 @@ distracting if these tokens don't visually align:
 
 #### Tabulated
 
-```
+```Idris
 data CoolDependentType : Nat -> Type -> Type where
   Foo  : String    -> (a : Maybe a)         -> CoolDependentType 0     a
   Bar  : (a : Nat) -> b                     -> CoolDependentType a     b
@@ -382,7 +382,7 @@ style. I find the following vertical style acceptable
 
 #### Vertical
 
-```
+```Idris
 data CoolDependentType : Nat -> Type -> Type where
   Foo
     :  String
@@ -404,7 +404,7 @@ data CoolDependentType : Nat -> Type -> Type where
 
 Record definitions have the most straightforward style
 
-```
+```Idris
 record VeryImportandData
   constructor MkVeryImportantData
   foo  : Int
@@ -428,13 +428,14 @@ record and type definitions.
 In some cases I prefer to collapse a bunch of related instances into a
 table, as in the following actual code snippet from `Render.idr`:
 
-```
+```Idris
 ||| Type-aware lowering to MathML elements
 interface ToMathML a where
   toMathML : a -> VDom
-
+```
 ....
 
+```Idris
 ToMathML String  where toMathML s = mi () s
 ToMathML VDom    where toMathML v = v
 ToMathML Integer where toMathML i = mn () i
