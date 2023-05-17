@@ -193,8 +193,8 @@ The compiler reports the following error message:
 This is misleading. The actual problem is at the end of the line:
 
 ```
-      90 | sub a b = rat (withCrossMul a b (-)) (a.denom * b.denom))
-	                                                               ^ extra parenthesis
+90 | sub a b = rat (withCrossMul a b (-)) (a.denom * b.denom))
+                                                             ^ extra parenthesis
 ```
 
 Consider this when trying to resolve a seemingly nonsensical error.
