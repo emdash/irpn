@@ -92,3 +92,28 @@ To enter the mixed number <tt>$3 {3 \over 4}$</tt>, tap `3`
 Fractions are also automatically created if you take the quotient of
 two integers that are not divisible. For example, the
 <tt>$3 \over 4$</tt> can also be entered by tapping: `3` `Enter` `4` `÷`.
+
+
+### Simplification and Approximation
+
+Addition of fractions uses cross-multiplication, resulting in
+ever-larger denominators.
+
+To express a fraction in lowest terms, use the `Simplify` key:
+
+| Keys                                     | Result Stack           |
+|------------------------------------------|------------------------|
+| `5` <tt>$x \over y$</tt> `1` `2` `Enter` | <tt>$5 \over 12$</tt>  |
+| `3` <tt>$x \over y$</tt> `8` `+`         | <tt>$76 \over 96$</tt> |
+| `simplify`                               | <tt>$19 \over 24$</tt> |
+
+You can also approximate to an arbitrary denominator. The `≈` function
+takes a fraction and a positive integer which represents the
+denominator:
+
+| Keys                                     | Result Stack           |
+|------------------------------------------|------------------------|
+| `5` <tt>$x \over y$</tt> `1` `2` `Enter` | <tt>$5  \over 12$</tt> |
+| `3` <tt>$x \over y$</tt> `8` `+`         | <tt>$76 \over 96$</tt> |
+| `1` `0` `≈`                              | <tt>$8  \over 10$</tt> |
+| `simplify`                               | <tt>$4  \over  5$</tt> |
