@@ -27,6 +27,27 @@ import Data.Nat.Factor
 
 %default total
 
+
+||| Find the element of xs which minimizes `fn x` over some sequence.
+|||
+||| XXX: move to Common.idr once circular dependency with Rat is
+||| resolved.
+public export
+argmin : Ord b => Foldable seq => (a -> b) -> a -> seq a -> a
+argmin fn init xs =
+  let
+    acc         = (init, (fn init))
+    (result, _) = foldl helper acc xs
+  in result
+  where
+    helper : (a, b) -> a -> (a, b)
+    helper prev@(result, least) next =
+      let check = fn next
+      in case compare check least of
+        LT => (next, check)
+        EQ => prev
+        GT => prev
+
 ||| A number represented as the signed ratio of two integers.
 export
 record Rat where
@@ -44,6 +65,10 @@ record Rat where
   -- we need this to apply gcd in `simplify`
   zeroSafe : NotBothZero (cast num) denom
 
+||| A useful constant
+public export
+one  : Rat
+one = MkRat 1 1 RightIsNotZero
 
 ||| Cast a nat to an integer, using the original sign
 public export
@@ -75,19 +100,19 @@ public export
 unpack : Rat -> (Integer, Nat)
 unpack (MkRat num denom _) = (num, denom)
 
+||| Apply f on the cross-multiplication of a and b
+withCrossMul : (Integer -> Integer -> a) -> Rat -> Rat -> a
+withCrossMul f a b = f (a.num * cast b.denom) (b.num * cast a.denom)
+
 ||| Add two rational numbers
 public export
 add : Rat -> Rat -> Either String Rat
-add a b = rat
-  (a.num * (cast b.denom) + b.num * (cast a.denom))
-  (a.denom * b.denom)
+add a b = rat (withCrossMul (+) a b) (a.denom * b.denom)
 
 ||| Subtract two rational numbers
 public export
 sub : Rat -> Rat -> Either String Rat
-sub a b = rat
-  (a.num * (cast b.denom) - b.num * (cast a.denom))
-  (a.denom * b.denom)
+sub a b = rat (withCrossMul (-) a b) (a.denom * b.denom)
 
 ||| Compute the multiplicative inverse of the given rational number
 public export
@@ -118,10 +143,8 @@ pow r exp =
     pow_nat x 0     = rat 1 1
     pow_nat x (S k) = mul x !(pow_nat x k)
 
-||| Approximate a to the nearest 1/b
-public export
-approx : Rat -> Nat -> Either String Rat
-approx rat denom = Left "Unimplemented"
+export Eq Rat  where (==)    = withCrossMul (==)
+export Ord Rat where compare = withCrossMul compare
 
 public export
 abs : Rat -> Either String Rat
@@ -139,6 +162,30 @@ simplify r = simplify_int !(abs r)
         n = (r.num) `signedDiv` (cast g)
         d = denom `div` g
       in rat (cast n) d
+
+||| Approximate a to the nearest 1/b
+|||
+||| This is surely not the most efficient method, but it'll do.
+public export
+approx : Rat -> Nat -> Either String Rat
+approx val tolerance =
+  let
+    -- as an optimization, construct normalize fractional part <= 1/1
+    -- so e.g. 19/12 becomes 7 / 12. this means our search is
+    -- O(tolerance), rather than O(whole * tolerance)
+    rem     = val.num `mod` (cast val.denom)
+    whole   = val.num `div` (cast val.denom)
+    proper  = rat rem val.denom
+    -- now find the numerator which minimizes the error
+    nearest = argmin (error !proper) 0 [1 .. (cast tolerance)]
+  in
+    -- don't forget to add the integral part back in
+    add !(rat whole 1) !(rat nearest tolerance)
+  where
+    -- here we are just taking the absolute value of the difference
+    -- between our guess and the input value.
+    error : Rat -> Integer -> Either String Rat
+    error proper n = abs $ !(sub proper !(rat n (cast tolerance)))
 
 ||| Try to coerce a rational to an integer
 |||

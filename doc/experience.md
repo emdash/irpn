@@ -154,6 +154,51 @@ production-ready. However, it is *usable*.
   - If an error doesn't make sense, it might be a compiler issue.
   - Often the error message will highlight the wrong portion of the source code
 
+### Misleading Error Message Example
+
+Consider the following idris source:
+
+```Idris
+||| Apply f on the cross-multiplication of a and b
+withCrossMul : Rat -> Rat -> (Integer -> Integer -> a) -> a
+withCrossMul a b f = f (a.num * cast b.denom) (b.num * cast a.denom)
+
+||| Add two rational numbers
+public export
+add : Rat -> Rat -> Either String Rat
+add a b = rat (withCrossMul a b (+)) (a.denom * b.denom)
+
+||| Subtract two rational numbers
+public export
+sub : Rat -> Rat -> Either String Rat
+sub a b = rat (withCrossMul a b (-)) (a.denom * b.denom))
+```
+
+The compiler reports the following error message:
+
+```
+- + Errors (1)
+ `-- src/Rat.idr line 90 col 0:
+     Couldn't parse declaration.
+
+     Rat:90:1--90:4
+      86 |
+      87 | ||| Subtract two rational numbers
+      88 | public export
+      89 | sub : Rat -> Rat -> Either String Rat
+      90 | sub a b = rat (withCrossMul a b (-)) (a.denom * b.denom))
+           ^^^
+```
+
+This is misleading. The actual problem is at the end of the line:
+
+```
+90 | sub a b = rat (withCrossMul a b (-)) (a.denom * b.denom))
+                                                             ^ extra parenthesis
+```
+
+Consider this when trying to resolve a seemingly nonsensical error.
+
 ## Practical Advice
 
 - make it a habbit to place `%default total` in all your files.
