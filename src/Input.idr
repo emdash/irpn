@@ -97,6 +97,7 @@ foldDigit i Eight = i * 10 + 8
 foldDigit i Nine  = i * 10 + 9
 
 ||| Convert a digit to a character
+public export
 digitToChar : Digit -> Char
 digitToChar Zero  = '0'
 digitToChar One   = '1'

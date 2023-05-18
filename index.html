@@ -142,7 +142,6 @@ along with rpncalc.  If not, see <https://www.gnu.org/licenses/>. -->
 	  overflow: hidden;
 	  text-overflow: ellipsis;
 	  margin-bottom: 0.25rem;
-	  //background-color: #dddddd;
 	  border-radius: 0.5em;
 	  text-align: center;
       }
@@ -234,7 +233,30 @@ along with rpncalc.  If not, see <https://www.gnu.org/licenses/>. -->
 
       #carret:empty::after {
 	  content: "\00a0";
-      };
+      }
+
+      .binding {
+	  display: flex;
+	  justify-content: space-between;
+      }
+
+      .keysym {
+	  font-size: small;
+	  background-color: #00000011;
+	  display: flex;
+	  justify-content: center;
+	  align-items: center;
+	  flex-order: 1;
+      }
+
+      .fn {
+	  font-size: small;
+	  display: flex;
+	  justify-content: center;
+	  align-items: center;
+	  flex-order: 0;
+	  flex-basis: 1;
+      }
 
       h1 {
 	  display: grid;
