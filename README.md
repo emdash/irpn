@@ -6,7 +6,7 @@
 - [x] Uses reverse-polish notation
 	  ([RPN](https://en.wikipedia.org/wiki/Reverse_Polish_notation))
 - [x] visible stack
-- [ ] visible variable environment
+- [x] visible variable environment
 - [x] Unlimited undo and redo
 - [x] Fraction mode
 - [x] Mobile-first, responsive layout.
@@ -63,16 +63,13 @@ See the [manual](doc/usage.md)
 
 - [x] get javascript compilation working
 - [ ] implement all the functions present in the JS version
-  - [ ] `approx` for rationals
+  - [x] `approx` for rationals
   - [ ] Coercion between `Double` and `Rat`
   - [ ] Log with arbitrary base
 - [x] port UX scaffolding and stylesheets from rpncalc
 - [x] implement rendering
 - [ ] persist sessions via local storage
 - [ ] unit-based arithmetic (dimensional analysis)
-  - [ ] us customary
-  - [ ] SI
-  - [ ] CGS
 - [ ] drag-and-drop stack stack reordering.
 - [ ] tape / history editing.
 - [ ] user-defined functions.

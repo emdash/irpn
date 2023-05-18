@@ -117,3 +117,39 @@ denominator:
 | `3` <tt>$x \over y$</tt> `8` `+`         | <tt>$76 \over 96$</tt> |
 | `1` `0` `≈`                              | <tt>$8  \over 10$</tt> |
 | `simplify`                               | <tt>$4  \over  5$</tt> |
+
+## Words, Variables, and Functions
+
+The scientific layout has character keys, 'x' and 'y' which can be used
+conveniently to store values for later use.
+
+### A Basic Example
+
+The top of the stack should contain the synbol being defined, with the
+value to be assigned directly below:
+
+| Keys        | Result Stack | Environment |
+|-------------|--------------|-------------|
+| `5` `Enter` | `5`          |             |
+| `x` `Enter` | `x` `5`      |             |
+| `=`         |              | `x: 5`      |
+| `x` `Enter` | `5`          | `x: 5`      |
+
+You can also tap `x` directly within the environment to recall x.
+
+Variables remain bound until the calculator is reset. It is not
+possible to re-define a variable once bound, because typing its name
+recalls its value.
+
+### Words are Functions
+
+Typing the name of any function also applies the function. Every
+function key is mapped to a named function. Tapping this key is
+equivalent to typing the function name directly.
+
+The key symbol is not necessarily the same as the function name. For
+example, `√` is bound to a function named `sqrt`.
+
+Variable bindings are a special case of function: constant
+functions. In the future, it will be possible to define more complex
+functions, and assign them to the environment.
