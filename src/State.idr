@@ -20,7 +20,7 @@
 ||| This module implements the high-level calculator functions
 module State
 
-import Data.HashMap
+import Data.SortedMap
 import Data.Nat.Exponentiation
 import Common
 import Input
@@ -151,7 +151,7 @@ unimplemented name xs = Left ("Unimplemented: " ++ name)
 
 ||| Maps names to calculator functions at runtime.
 public export Env : Type
-Env = HashMap String StackFn
+Env = SortedMap String StackFn
 
 ||| Table of builtin functions
 builtins : Env
@@ -193,8 +193,8 @@ builtins = fromList [
 ||| First check the user env. If that fails, check the table of
 ||| builtins.
 lookup : String -> Env -> Either Error StackFn
-lookup key env = case HashMap.lookup key env of
-  Nothing => case HashMap.lookup key builtins of
+lookup key env = case SortedMap.lookup key env of
+  Nothing => case SortedMap.lookup key builtins of
     Nothing => Left "Invalid Function"
     Just fn => Right fn
   Just fn => Right fn
@@ -295,5 +295,5 @@ define state = do
   ((S name), state) <- pop state | _ => Left "Not a name"
   (val, state)      <- pop state
   pure ({
-    env $= (HashMap.insert name (constFn val))
+    env $= (SortedMap.insert name (constFn val))
   } state)

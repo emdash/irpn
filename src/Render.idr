@@ -21,7 +21,7 @@
 ||| This module implements application-specific rendering
 module Render
 
-import Data.HashMap
+import Data.SortedMap
 import Data.List
 import Data.String
 import JS
