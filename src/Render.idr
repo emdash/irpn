@@ -339,6 +339,35 @@ radioGroup selected ((key, label, action) :: xs) = let
     else ["click" ::> action]
   in (button attrs label) :: (radioGroup selected xs)
 
+||| Table from function names to button labels.
+|||
+||| Not all functions have a special symbol, so this returns a Maybe.
+fnKeys : String -> Maybe VDom
+fnKeys "swap"   = Just $ T "\x2B0D"
+fnKeys "add"    = Just $ T "+"
+fnKeys "sub"    = Just $ T "-"
+fnKeys "mul"    = Just $ T "⨉"
+fnKeys "div"    = Just $ T "÷"
+fnKeys "pow"    = Just $ T "x\x207F"
+fnKeys "exp"    = Just $ T "\x1D486\x207F"
+fnKeys "square" = Just $ T "x\x00B2"
+fnKeys "abs"    = Just $ T "|\x1D499|"
+fnKeys "sqrt"   = Just $ T "\x221A"
+fnKeys "E"      = Just $ T "\x1D486"
+fnKeys "PI"     = Just $ T "\x1D70B"
+fnKeys "frac"   = Just $ T "fraction"
+fnKeys "fadd"   = Just $ T "+"
+fnKeys "fsub"   = Just $ T "-"
+fnKeys "fmul"   = Just $ T "⨉"
+fnKeys "fdiv"   = Just $ T "÷"
+fnKeys "f2"     = Just $ math () $ fraction "x"   2
+fnKeys "f4"     = Just $ math () $ fraction "x"   4
+fnKeys "f8"     = Just $ math () $ fraction "x"   8
+fnKeys "f16"    = Just $ math () $ fraction "x"  16
+fnKeys "inv"    = Just $ math () $ fraction 1    "x"
+fnKeys "approx" = Just $ T "\x2248"
+fnKeys _        = Nothing
+
 ||| Map actions to button labels
 |||
 ||| For some of these, we can return unicode strings which will work
@@ -346,50 +375,18 @@ radioGroup selected ((key, label, action) :: xs) = let
 ||| better - with the caveat that it only works in Firefox without a
 ||| polyfill.
 symbols : Action -> VDom
-symbols (Key (Alpha c))   = T c
-symbols (Key (Dig Zero))  = T '0'
-symbols (Key (Dig One))   = T '1'
-symbols (Key (Dig Two))   = T '2'
-symbols (Key (Dig Three)) = T '3'
-symbols (Key (Dig Four))  = T '4'
-symbols (Key (Dig Five))  = T '5'
-symbols (Key (Dig Six))   = T '6'
-symbols (Key (Dig Seven)) = T '7'
-symbols (Key (Dig Eight)) = T '8'
-symbols (Key (Dig Nine))  = T '9'
-symbols (Key Point)       = T '.'
-symbols (Key Frac)        = math () $ fraction "x" "y"
-symbols (Key Clear)       = T "Clear"
-symbols (Apply "swap"  )  = T "\x2B0D"
-symbols (Apply "add"   )  = T "+"
-symbols (Apply "sub"   )  = T "-"
-symbols (Apply "mul"   )  = T "⨉"
-symbols (Apply "div"   )  = T "÷"
-symbols (Apply "pow"   )  = T "x\x207F"
-symbols (Apply "exp"   )  = T "\x1D486\x207F"
-symbols (Apply "square")  = T "x\x00B2"
-symbols (Apply "abs"   )  = T "|\x1D499|"
-symbols (Apply "sqrt"  )  = T "\x221A"
-symbols (Apply "E"     )  = T "\x1D486"
-symbols (Apply "PI"    )  = T "\x1D70B"
-symbols (Apply "frac"  )  = T "fraction"
-symbols (Apply "fadd"  )  = T "+"
-symbols (Apply "fsub"  )  = T "-"
-symbols (Apply "fmul"  )  = T "⨉"
-symbols (Apply "fdiv"  )  = T "÷"
-symbols (Apply "f2"    )  = math () $ fraction "x"   2
-symbols (Apply "f4"    )  = math () $ fraction "x"   4
-symbols (Apply "f8"    )  = math () $ fraction "x"   8
-symbols (Apply "f16"   )  = math () $ fraction "x"  16
-symbols (Apply "inv"   )  = math () $ fraction 1    "x"
-symbols (Apply "approx")  = T "\x2248"
-symbols (Apply x       )  = small () x
-symbols Enter             = T "Enter"
-symbols (Show str)        = T str
-symbols Define            = T "="
-symbols Undo              = T "Undo"
-symbols Redo              = T "Redo"
-symbols Reset             = T "Reset"
+symbols (Key (Alpha c)) = T c
+symbols (Key (Dig d))   = T $ digitToChar d
+symbols (Key Point)     = T '.'
+symbols (Key Frac)      = math () $ fraction "x" "y"
+symbols (Key Clear)     = T "Clear"
+symbols (Apply x)       = tryWith fnKeys (small ()) x
+symbols Enter           = T "Enter"
+symbols (Show str)      = T str
+symbols Define          = T "="
+symbols Undo            = T "Undo"
+symbols Redo            = T "Redo"
+symbols Reset           = T "Reset"
 
 ||| Render the accumulator's blinky cursor
 |||
@@ -462,15 +459,19 @@ vars filterTerm env = container "vars-container" "Vars" (content filterTerm)
     matches x y = isPrefixOf x y || isSuffixOf x y
 
     ||| Create the actual button element
+    |||
+    ||| This will show both the function name and its special symbol
+    ||| if defined.
     key : String -> VDom
-    key name =
-      let action = Apply name
-      in button
-        (
-          "class" ::= "function",
-          "click" ::> action
-        )
-        (symbols action)
+    key name = button
+      (
+        "class" ::= "binding",
+        "click" ::> Apply name
+      )
+      (
+       span ("class" ::= "fn") name,
+       map (span ("class" ::= "keysym")) (fnKeys name)
+      )
 
     ||| Create a button for each bound variable, filtered according to
     ||| the search term if present.
