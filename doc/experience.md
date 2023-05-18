@@ -124,8 +124,11 @@ I installed Idris 2 via
 
 If you install this way, you can also use pack for dependency
 management in your idris projects, which is important because Idris
-has a relatively small standard library that is missing things you
-might expect -- like hashtables.
+has a relatively small standard library.
+
+Idris2's standard library is much more complete than that of Idris 1,
+so this is a good incentive to migrate to Idris 2 as soon as you get
+far enough into the book.
 
 # Bugs, Gotchas, and Advice
 
@@ -201,6 +204,10 @@ Consider this when trying to resolve a seemingly nonsensical error.
 
 ## Practical Advice
 
+- Write a .ipkg for your project early
+  - you get this for free if you use pack to create new projects
+  - You probably want to add the `contrib` package to your
+    dependencies.
 - make it a habbit to place `%default total` in all your files.
   - this makes all definitions implicitly total, and you opt into partiality
   - this is better than the default, which is the other way around
