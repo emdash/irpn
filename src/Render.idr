@@ -54,7 +54,7 @@ interface Show t => ToString t where
 ToString String          where toString x = x
 ToString (List Char)     where toString x = pack x
 ToString Char            where toString x = pack [x]
-ToString (SnocList Char) where toString x = pack (asList x)
+ToString (SnocList Char) where toString x = pack (toList x)
 ToString Nat             where
 ToString Integer         where
 ToString Double          where
