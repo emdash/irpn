@@ -295,5 +295,5 @@ define state = do
   ((S name), state) <- pop state | _ => Left "Not a name"
   (val, state)      <- pop state
   pure ({
-    env := (HashMap.insert name (constFn val) env)
+    env $= (HashMap.insert name (constFn val))
   } state)
