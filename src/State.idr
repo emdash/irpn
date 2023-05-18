@@ -189,14 +189,9 @@ builtins = fromList [
 ]
 
 ||| Wrapper around hashtable lookup
-|||
-||| First check the user env. If that fails, check the table of
-||| builtins.
 lookup : String -> Env -> Either Error StackFn
 lookup key env = case SortedMap.lookup key env of
-  Nothing => case SortedMap.lookup key builtins of
-    Nothing => Left "Invalid Function"
-    Just fn => Right fn
+  Nothing => Left "Invalid Function"
   Just fn => Right fn
 
 ||| A high-level input token
@@ -215,7 +210,7 @@ record State where
 ||| Initial state of the calculator
 public export
 init : State
-init = MkState Empty [] Lin empty
+init = MkState Empty [] Lin builtins
 
 ||| Send an input symbol to the accumulator
 public export
