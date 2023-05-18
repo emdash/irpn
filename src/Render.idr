@@ -454,9 +454,13 @@ stack : List Common.Value -> VDom
 stack vs = container "stack-container" "Stack" (map toMathML vs)
 
 public export
-vars : Env -> VDom
-vars env = container "vars-container" "Vars" (map key $ keys env)
+vars : Maybe String -> Env -> VDom
+vars filterTerm env = container "vars-container" "Vars" (content filterTerm)
   where
+    ||| True if string matches the search term
+    matches : String -> String -> Bool
+    matches x y = isPrefixOf x y || isSuffixOf x y
+
     ||| Create the actual button element
     key : String -> VDom
     key name =
@@ -467,6 +471,13 @@ vars env = container "vars-container" "Vars" (map key $ keys env)
           "click" ::> action
         )
         (symbols action)
+
+    ||| Create a button for each bound variable, filtered according to
+    ||| the search term if present.
+    content : Maybe String -> List VDom
+    content Nothing       = map key $ keys env
+    content (Just substr) = map key $ filter (matches substr) $ keys env
+
 
 public export
 tape : VDom
@@ -562,7 +573,11 @@ render_calc calc err =
       mode calc,
       tools,
       stack calc.state.stack,
-      vars calc.state.env,
+      vars (filterTerm calc.state.accum) calc.state.env,
       content calc,
       render_accum calc.state.accum err
     ]
+  where
+    filterTerm : Input.Accum -> Maybe String
+    filterTerm (Id partialWord) = Just (toString partialWord)
+    filterTerm _                = Nothing
