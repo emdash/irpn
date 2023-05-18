@@ -120,10 +120,26 @@ denominator:
 
 ## Words, Variables, and Functions
 
-The scientific layout has character keys, 'x' and 'y' which can be used
-conveniently to store values for later use.
+In addition to entering numbers and applying functions, you may also
+enter characters into the keypad. The input register must be empty. If
+the next input is an alphanumeric character, then the input register
+contains a word.
 
-### A Basic Example
+### Qwerty Layouts: `a` and `A`
+
+The `scientific` layout has two handy character keys, 'x' and 'y'. These
+behave just like `x` and `y` in the `a` qwerty keypad layout.
+
+Choose the `a` layout to enter lower-case letters. Choose the `A`
+layout to enter upper-case letters.
+
+The contents of the `Vars` pane is filtered whenever the accumulator
+contains a valid word.
+
+### Storing Values
+
+If the input register contains an unknown word, then pressing enter
+will place the word onto the stack.
 
 The top of the stack should contain the synbol being defined, with the
 value to be assigned directly below:
@@ -143,13 +159,12 @@ recalls its value.
 
 ### Words are Functions
 
-Typing the name of any function also applies the function. Every
-function key is mapped to a named function. Tapping this key is
-equivalent to typing the function name directly.
+Typing the name of a function applies the function. Every function key
+is mapped to a named function. Tapping this key is equivalent to
+typing the function name directly.
 
 The key symbol is not necessarily the same as the function name. For
 example, `√` is bound to a function named `sqrt`.
 
 Variable bindings are a special case of function: constant
-functions. In the future, it will be possible to define more complex
-functions, and assign them to the environment.
+functions.
