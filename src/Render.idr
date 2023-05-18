@@ -21,6 +21,7 @@
 ||| This module implements application-specific rendering
 module Render
 
+import Data.HashMap
 import Data.List
 import Data.String
 import JS
@@ -453,8 +454,19 @@ stack : List Common.Value -> VDom
 stack vs = container "stack-container" "Stack" (map toMathML vs)
 
 public export
-vars : VDom
-vars = container "vars-container" "Vars" "not implemented"
+vars : Env -> VDom
+vars env = container "vars-container" "Vars" (map key $ keys env)
+  where
+    ||| Create the actual button element
+    key : String -> VDom
+    key name =
+      let action = Apply name
+      in button
+        (
+          "class" ::= "function",
+          "click" ::> action
+        )
+        (symbols action)
 
 public export
 tape : VDom
@@ -550,6 +562,7 @@ render_calc calc err =
       mode calc,
       tools,
       stack calc.state.stack,
+      vars calc.state.env,
       content calc,
       render_accum calc.state.accum err
     ]
