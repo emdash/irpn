@@ -159,12 +159,15 @@ recalls its value.
 
 ### Words are Functions
 
-Typing the name of a function applies the function. Every function key
-is mapped to a named function. Tapping this key is equivalent to
-typing the function name directly.
-
-The key symbol is not necessarily the same as the function name. For
-example, `√` is bound to a function named `sqrt`.
-
 Variable bindings are a special case of function: constant
-functions.
+functions. In general, functions can make arbitrary changes to the
+stack.
+
+Typing the name of a function applies the function to the current
+stack. Every function key is bound to a named function. Tapping this
+key is equivalent to typing the function and pressing enter.
+
+The symbol shown on the function key is not necessarily the same as
+the function name. For example, `√` is bound to a function named
+`sqrt`. The Vars pane shows both the function name and its
+corresponding symbol, if any exists.
