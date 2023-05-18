@@ -150,7 +150,7 @@ unimplemented : String -> StackFn
 unimplemented name xs = Left ("Unimplemented: " ++ name)
 
 ||| Maps names to calculator functions at runtime.
-Env : Type
+public export Env : Type
 Env = HashMap String StackFn
 
 ||| Table of builtin functions
@@ -188,11 +188,16 @@ builtins = fromList [
   ("square"  , unaryFn square)
 ]
 
-||| Wrapper around hashtable lookup which translates errors
+||| Wrapper around hashtable lookup
+|||
+||| First check the user env. If that fails, check the table of
+||| builtins.
 lookup : String -> Env -> Either Error StackFn
 lookup key env = case HashMap.lookup key env of
-  Nothing => Left "Invalid Function"
-  Just f  => Right f
+  Nothing => case HashMap.lookup key builtins of
+    Nothing => Left "Invalid Function"
+    Just fn => Right fn
+  Just fn => Right fn
 
 ||| A high-level input token
 public export
@@ -210,7 +215,7 @@ record State where
 ||| Initial state of the calculator
 public export
 init : State
-init = MkState Empty [] Lin builtins
+init = MkState Empty [] Lin empty
 
 ||| Send an input symbol to the accumulator
 public export
@@ -219,18 +224,50 @@ input symbol state = do
   next <- fromMaybe "Invalid Char" (enterKey symbol state.accum)
   pure ({ accum := next } state)
 
-||| Transfer a value from accumulator to stack
-|||
-||| The accumulator will be cleared, and the value appended to the tape.
-public export
-enter : State -> Either Error State
-enter state = do
-  value <- Input.value state.accum
-  pure ({
-      accum := Empty,
-      stack $= (value ::),
-      tape  $= (:< (Val value))
-  } state)
+||| Put a value onto the stack.
+push : Value -> State -> Either Error State
+push value state = pure ({
+  accum := Empty,
+  stack $= (value ::),
+  tape  $= (:< (Val value))
+} state)
+
+mutual
+  ||| Transfer a value from accumulator to stack
+  |||
+  ||| The accumulator will be cleared, and the value appended to the tape.
+  public export
+  enter : State -> Either Error State
+  enter state = do
+    value <- Input.value state.accum
+    case value of
+      (S var) => case lookup var (state.env) of
+        -- if the value is a defined word, then lookup its function in env
+        -- and apply it to the stack.
+        Left  err => push value state
+        Right _   => assert_total (apply var $ !(input Clear state))
+        -- otherwise push the value as given
+      _ => push value state
+
+  ||| Try to apply a named function to the current stack.
+  |||
+  ||| If the accumulator is non-empty, its contents will first be
+  ||| transfered to the stack.
+  |||
+  ||| If application succeeds, the resulting state is returned.
+  ||| If the stack is in an invalid state, the error will be returned.
+  public export
+  apply : String -> State -> Either Error State
+  apply name state = do
+    state <- if isEmpty state.accum
+             then (Right state)
+             else (enter state)
+    func  <- lookup name state.env
+    stack <- func state.stack
+    pure ({
+      stack := stack,
+      tape $= (:< Fn name)
+    } state)
 
 ||| Return the top of stack, within the either monad
 public export
@@ -246,34 +283,17 @@ pop state = case state.stack of
   []      => Left "Stack Underflow"
   x :: xs => Right (x, { stack := xs } state)
 
-||| Try to apply a named function to the current stack.
-|||
-||| If the accumulator is non-empty, its contents will first be
-||| transfered to the stack.
-|||
-||| If application succeeds, the resulting state is returned.
-||| If the stack is in an invalid state, the error will be returned.
-public export
-apply : String -> State -> Either Error State
-apply name state = do
-  state <- if isEmpty state.accum
-           then (Right state)
-           else (enter state)
-  func  <- lookup name state.env
-  stack <- func state.stack
-  pure ({
-    stack := stack,
-    tape $= (:< Fn name)
-  } state)
-
 ||| Bind the name at the top of stack to the value immediately below it.
 |||
 ||| This will re-bind the name, if it was previously bound.
 public export
 define : State -> Either Error State
 define state = do
-  ((S name), state) <- pop state | _ => Left "Not a String"
+  state <- if isEmpty state.accum
+        then (Right state)
+        else (enter state)
+  ((S name), state) <- pop state | _ => Left "Not a name"
   (val, state)      <- pop state
   pure ({
-    env $= (HashMap.insert name (constFn val))
+    env := (HashMap.insert name (constFn val) env)
   } state)
